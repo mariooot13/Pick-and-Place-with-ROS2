@@ -55,6 +55,8 @@ Demo nodes for showing and testing functionalities of the ros2_control framework
             #modificado:
             "executable_nodo_prueba = \
                 ros2_control_test_nodes.primera_prueba_nodo_propio:main",
+            #"exec_moveit = \
+            #    ros2_control_test_nodes.movewithmoveit.py",
         ],
     },
 )
