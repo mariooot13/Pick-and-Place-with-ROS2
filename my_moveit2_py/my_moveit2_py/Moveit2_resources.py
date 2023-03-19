@@ -415,6 +415,7 @@ class MoveIt2:
         self.clear_goal_constraints()
 
         return joint_trajectory
+        self._node.get_logger.info(str(joint_trajectory))
 
     def execute(self, joint_trajectory: JointTrajectory):
         """
@@ -932,6 +933,7 @@ class MoveIt2:
 
         if move_action_result.status == GoalStatus.STATUS_SUCCEEDED:
             return move_action_result.result.planned_trajectory.joint_trajectory
+            
         else:
             return None
 
@@ -1067,6 +1069,7 @@ class MoveIt2:
             feedback_callback=None,
         )
 
+	
         self.__send_goal_future_move_action.add_done_callback(
             self.__response_callback_move_action
         )
@@ -1122,7 +1125,8 @@ class MoveIt2:
         action_result.add_done_callback(
             self.__response_callback_follow_joint_trajectory
         )
-
+	
+	
         if wait_until_response:
             self.__future_done_event.clear()
             action_result.add_done_callback(
@@ -1133,6 +1137,8 @@ class MoveIt2:
             action_result.add_done_callback(
                 self.__response_callback_follow_joint_trajectory
             )
+        
+        
 
     def __response_callback_follow_joint_trajectory(self, response):
 
@@ -1153,11 +1159,13 @@ class MoveIt2:
         self.__get_result_future_follow_joint_trajectory.add_done_callback(
             self.__result_callback_follow_joint_trajectory
         )
+        
 
     def __response_callback_with_event_set_follow_joint_trajectory(self, response):
 
         self.__response_callback_follow_joint_trajectory(response)
         self.__future_done_event.set()
+        
 
     def __result_callback_follow_joint_trajectory(self, res):
 

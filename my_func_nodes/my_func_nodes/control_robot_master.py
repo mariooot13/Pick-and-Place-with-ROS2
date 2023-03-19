@@ -1,17 +1,3 @@
-# Copyright 2021 Stogl Robotics Consulting UG (haftungsbeschränkt)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import rclpy
 from rclpy.node import Node
 from builtin_interfaces.msg import Duration
@@ -24,17 +10,20 @@ from functools import partial
 from ur_msgs.srv import SetIO
 
 
-class PublisherJointTrajectory(Node):
+class control_robot_master(Node):
     def __init__(self):
-        super().__init__("publisher_joint_trajectory_position_controller")
+        super().__init__("control_robot_master")
+        
         # Declare all parameters
         self.declare_parameter("controller_name", "joint_trajectory_position_controller")
         self.declare_parameter("joints")
         self.declare_parameter("check_starting_point", False)
         self.declare_parameter("starting_point_limits")
 
-        # Read parameters
-        self.pos_wanted = JointTrajectory()
+       
+        self.pos_wanted = JointTrajectory() #Trajectory 
+        
+         # Read parameters
         controller_name = self.get_parameter("controller_name").value
         self.joints = self.get_parameter("joints").value
         self.check_starting_point = self.get_parameter("check_starting_point").value
@@ -43,6 +32,7 @@ class PublisherJointTrajectory(Node):
             'LETSGO')
 	
         #self.subscriber_ = self.create_subscription(Float64MultiArray, "posicion_pedida",self.callback_recibo_pos_pedida, 10)
+        
         self.subscriber_ = self.create_subscription(JointTrajectory, "trajectory_from_moveit2",self.callback_recibo_pos_pedida, 10)
    
 	
@@ -81,7 +71,7 @@ class PublisherJointTrajectory(Node):
         self.timer = self.create_timer(10, self.timer_callback)
         
     
-    #prueba de servicio para la pinza.
+    #Servicio GRIPPER
     def call_gripper(self, fun, pin, state):
             client = self.create_client(SetIO, "/io_and_status_controller/set_io") #servicio de la pinza ya creado.
         
@@ -184,10 +174,10 @@ class PublisherJointTrajectory(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    publisher_joint_trajectory = PublisherJointTrajectory()
+    control_robot_joint_trajectory = control_robot_master()
 
-    rclpy.spin(publisher_joint_trajectory)
-    publisher_joint_trajectory.destroy_node()
+    rclpy.spin(control_robot_joint_trajectory)
+    control_robot_joint_trajectory.destroy_node()
     rclpy.shutdown()
 
 
