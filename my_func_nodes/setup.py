@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-        "control_robot_exec = my_func_nodes.control_robot_master:main"
+        "control_robot_exec = my_func_nodes.control_robot_master:main",
+        "camera_exec = my_func_nodes.camera_pub_pos:main"
         ],
     },
 )

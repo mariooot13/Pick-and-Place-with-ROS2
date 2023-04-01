@@ -1,14 +1,22 @@
+
 import rclpy
 from rclpy.node import Node
 from builtin_interfaces.msg import Duration
 
+from threading import Thread
+
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
 
 from functools import partial
 from ur_msgs.srv import SetIO
 
+from my_moveit2_py.Moveit2_resources import MoveIt2 #own resources
+from my_moveit2_py import ur3e_model #own resources
+
+from rclpy.callback_groups import ReentrantCallbackGroup
 
 class control_robot_master(Node):
     def __init__(self):
@@ -20,22 +28,23 @@ class control_robot_master(Node):
         self.declare_parameter("check_starting_point", False)
         self.declare_parameter("starting_point_limits")
 
-       
-        self.pos_wanted = JointTrajectory() #Trajectory 
-        
-         # Read parameters
+        # Read parameters
+        self.pos_wanted = JointTrajectory()
         controller_name = self.get_parameter("controller_name").value
         self.joints = self.get_parameter("joints").value
         self.check_starting_point = self.get_parameter("check_starting_point").value
         self.starting_point = {}
         self.get_logger().info(
             'LETSGO')
+            
+        #self.callback_group = ReentrantCallbackGroup()
 	
-        #self.subscriber_ = self.create_subscription(Float64MultiArray, "posicion_pedida",self.callback_recibo_pos_pedida, 10)
-        
-        self.subscriber_ = self.create_subscription(JointTrajectory, "trajectory_from_moveit2",self.callback_recibo_pos_pedida, 10)
+	#Subscribers & Publishers
+        self.subscriber_camera = self.create_subscription(Pose, "posicion_pedida",self.callback_recibo_pos_pedida, 10)
+        self.pose_required = Pose()
    
 	
+	#Safety joints
         if self.joints is None or len(self.joints) == 0:
             raise Exception('"joints" parameter is not set!')
 
@@ -53,10 +62,9 @@ class control_robot_master(Node):
             self.joint_state_sub = self.create_subscription(
                 JointState, "joint_states", self.joint_state_callback, 10
             )
+
             
-            
-            
-        # initialize starting point status
+        # Initialize starting point status
         if not self.check_starting_point:
             self.starting_point_ok = True
         else:
@@ -67,11 +75,13 @@ class control_robot_master(Node):
 
         publish_topic = "/" + controller_name + "/" + "joint_trajectory"
 	
-        self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
-        self.timer = self.create_timer(10, self.timer_callback)
+        #self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
+        #self.timer = self.create_timer(4, self.timer_callback)
         
+        
+    #PINZA:
     
-    #Servicio GRIPPER
+    #prueba de servicio para la pinza.
     def call_gripper(self, fun, pin, state):
             client = self.create_client(SetIO, "/io_and_status_controller/set_io") #servicio de la pinza ya creado.
         
@@ -95,51 +105,47 @@ class control_robot_master(Node):
     	except Exception as e:
 	        self.get_logger().error("Service reset call failed %r" % (e,))
         
-
-
-
-    """def callback_recibo_pos_pedida(self, msg):
-        if self.pos_wanted is None:
-            self.pos_wanted = [-1.60, -1.72, -1.35, -3.22, -1.72, 5.20]
-            self.get_logger().info('No position introduced, a new review is required')
-        else:
-            self.pos_wanted = msg.data 
-               
-        self.get_logger().info('Moving the robot to the position {}.'.format(self.pos_wanted))"""
-    
-    def callback_recibo_pos_pedida(self, msg):
-        if self.pos_wanted is None:
-            self.get_logger().info('No position introduced, a new review is required')
-        else:
-            self.pos_wanted.points = msg.points 
-               
         
     
-    
+    def callback_recibo_pos_pedida(self, msg):
+            self.pose_required.position = msg.position
+            self.pose_required.orientation = msg.orientation
+            
+            print(f"{msg.position.x}")
+
+               
+               
+
     def timer_callback(self):
 
         if self.starting_point_ok:
-        
-            traj = JointTrajectory()
-            traj.joint_names = self.joints
-            traj.points = self.pos_wanted.points 
-            #point = JointTrajectoryPoint()
-            #point.positions = self.pos_wanted.points 
-            #point.time_from_start = Duration(sec=4)
-            #traj.points.append(point)
-            self.publisher_.publish(traj)
             
-            #if self.pos_wanted[3] < 1.15 and self.pos_wanted[3] > -2 :
-            #	self.call_gripper(1, 17, 24.0)
-            """         
-            int8 fun
-            int8 pin
-            float32 state
-            ---
-            bool success
+
+            """ traj = JointTrajectory()
+            traj.joint_names = self.joints
+            self.get_logger().info("antes")
             
            
-	        """
+            
+            self.moveit2.destroy_node()
+            #self.moveit2.wait_until_executed()
+            #self.moveit2.destroy_node()
+            self.get_logger().info("despues")
+            #traj.joint_names = self.joints
+            #traj.points = self.pos_wanted.points  # es la buena 
+            
+        
+            #traj.points = traj_aux.points
+            point = JointTrajectoryPoint()
+            point.positions = a.points
+            #point.time_from_start = Duration(sec=4)
+            traj.points.append(point)"""
+            #a = self.moveit2.plan(position=[-0.252, -0.118, 0.195], quat_xyzw=[0.570803357577419, 0.8205298265175397, -0.00518912143252199, 0.029789323459918908], cartesian=True)
+            #self.publisher_.publish(a)
+            
+            #if self.pos_wanted[3] < 1.15 and self.pos_wanted[3] > -2 :
+            self.call_gripper(1, 17, 24.0)
+
 
         elif self.check_starting_point and not self.joint_state_msg_received:
             self.get_logger().warn(
@@ -173,13 +179,40 @@ class control_robot_master(Node):
 
 def main(args=None):
     rclpy.init(args=args)
+    
+    control_node = control_robot_master() #Ajuste de parámteros de las articulaciones del robot
+    
 
-    control_robot_joint_trajectory = control_robot_master()
 
-    rclpy.spin(control_robot_joint_trajectory)
-    control_robot_joint_trajectory.destroy_node()
+    moveit2 = MoveIt2(
+        node=control_node,
+        joint_names=ur3e_model.joint_names(),
+        base_link_name=ur3e_model.base_link_name(),
+        end_effector_name=ur3e_model.end_effector_name(),
+        group_name=ur3e_model.MOVE_GROUP_ARM,
+        #callback_group=self.callback_group,
+        )
+
+        
+    executor = rclpy.executors.MultiThreadedExecutor(2)
+    executor.add_node(control_node)
+    executor_thread = Thread(target=executor.spin, daemon=True, args=())
+    executor_thread.start()
+    
+        
+    moveit2.move_to_pose(position=[-0.252, -0.118, 0.195], quat_xyzw=[0.570803357577419, 0.8205298265175397, -0.00518912143252199, 0.029789323459918908], cartesian=False) #moveit mueve el robot
+    moveit2.wait_until_executed()  
+    
+    #control_node.call_gripper(1, 17, 24.0) #control abre la pinza
+    
+    moveit2.move_to_pose(position=[-0.1, -0.118, 0.195], quat_xyzw=[0.570803357577419, 0.8205298265175397, -0.00518912143252199, 0.029789323459918908], cartesian=False)
+    moveit2.wait_until_executed()
+    
+
+    rclpy.spin(control_node)
+    control_node.destroy_node()
     rclpy.shutdown()
-
+    
 
 if __name__ == "__main__":
     main()

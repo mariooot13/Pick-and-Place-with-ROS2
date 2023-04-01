@@ -3,33 +3,63 @@ import os
 
 from launch.substitutions import PathJoinSubstitution
 from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
-
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
 
-    """config_parameters = PathJoinSubstitution(
-        [FindPackageShare("my_robot_bringup_ms"), "config", "param_bringup.yaml"]
-    )"""
+
+    get_package_share_directory("my_robot_bringup_ms")
     
-    moveit2_UR = Node(
-        package="my_moveit2_py",
-        executable="executable_node_moveit", #dentro de moveit2_py
+    config_parameters = PathJoinSubstitution(
+        [FindPackageShare("my_robot_bringup_ms"), "/home/mario/workspace/ros_ur_driver/src/my_robot_bringup_ms/config", "param_bringup.yaml"]
     )
     
-    """control_robot = Node(
-        package="my_func_nodes",
-        executable="control_robot_exec",
-        name="control_robot_master",
-        parameters=[config_parameters],
-        output={"stdout": "screen", "stderr": "screen"},
-    )"""
+    try:
+        get_package_share_directory("my_func_nodes")
+    except PackageNotFoundError:
+        print(
+            "ERROR:"
+            "Could not find the package" 
+        )
+        sys.exit(1)
+    
+    IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([
+                    FindPackageShare('ur_bringup'),
+                    '/launch/ur_control.launch.py'
+                ])
+            ]),
+            launch_arguments={
+                'ur_type': 'ur3e',
+                'robot_ip': '192.168.20.35',
+                'use_fake_hardware':'true',
+                'launch_rviz':'true',
+                'initial_joint_controller':'joint_trajectory_controller'
+            }.items()
+        )
+    
+    
+    
+    control_robot_node = Node(
+                package="my_func_nodes",
+                executable="control_robot_exec",
+                name="control_robot_master",
+                parameters=[config_parameters],
+                output={
+                    "stdout": "screen",
+                    "stderr": "screen",
+                },
+            )
 
     nodes_to_start = [
-    	moveit2_UR,
-    	#control_robot,
+    	control_robot_node,
+    	
     ]   
 
     return LaunchDescription(nodes_to_start)

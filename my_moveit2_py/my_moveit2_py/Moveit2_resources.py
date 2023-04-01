@@ -416,6 +416,7 @@ class MoveIt2:
 
         return joint_trajectory
         self._node.get_logger.info(str(joint_trajectory))
+       
 
     def execute(self, joint_trajectory: JointTrajectory):
         """
