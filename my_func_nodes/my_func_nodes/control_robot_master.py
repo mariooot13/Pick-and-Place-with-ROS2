@@ -1,7 +1,9 @@
-
+import asyncio
 import rclpy
 from rclpy.node import Node
 from builtin_interfaces.msg import Duration
+
+import time
 
 from threading import Thread
 
@@ -36,14 +38,14 @@ class control_robot_master(Node):
         self.starting_point = {}
         self.get_logger().info(
             'LETSGO')
-            
+        self.inp = None    
         #self.callback_group = ReentrantCallbackGroup()
 	
 	#Subscribers & Publishers
-        self.subscriber_camera = self.create_subscription(Pose, "posicion_pedida",self.callback_recibo_pos_pedida, 10)
         self.pose_required = Pose()
+        self.subscriber_camera = self.create_subscription(Pose, "posicion_pedida",self.callback_recibo_pos_pedida, 10)
+        
    
-	
 	#Safety joints
         if self.joints is None or len(self.joints) == 0:
             raise Exception('"joints" parameter is not set!')
@@ -77,8 +79,8 @@ class control_robot_master(Node):
 	
         #self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
         #self.timer = self.create_timer(4, self.timer_callback)
-        
-        
+
+
     #PINZA:
     
     #prueba de servicio para la pinza.
@@ -104,57 +106,41 @@ class control_robot_master(Node):
 
     	except Exception as e:
 	        self.get_logger().error("Service reset call failed %r" % (e,))
-        
+
+    #The pin can varies with the robot
+
+    def close_gripper(self):
+        self.call_gripper(1, 17, 24.0)
+        time.sleep(0.5)
+        self.call_gripper(1,17,0.0) #Hay que descargar la pinza.
+    
+    def open_gripper(self):
+        self.call_gripper(1, 16, 24.0)
+        time.sleep(0.5)
+        self.call_gripper(1,16,0.0) #Hay que descargar la pinza.
         
     
+    #POSICION DE LA CAMARA
+
+    def pose_required_print(self):
+
+        if self.pose_required is not None:
+            return self.pose_required
+    
     def callback_recibo_pos_pedida(self, msg):
-            self.pose_required.position = msg.position
-            self.pose_required.orientation = msg.orientation
-            
-            print(f"{msg.position.x}")
+        self.pose_required.position.x = msg.position.x
+        self.pose_required.position.y = msg.position.y
+        self.pose_required.position.z = msg.position.z
+   
+        self.pose_required.orientation.x = msg.orientation.x
+        self.pose_required.orientation.y = msg.orientation.y
+        self.pose_required.orientation.z = msg.orientation.z
+        self.pose_required.orientation.w = msg.orientation.w
 
-               
-               
-
-    def timer_callback(self):
-
-        if self.starting_point_ok:
-            
-
-            """ traj = JointTrajectory()
-            traj.joint_names = self.joints
-            self.get_logger().info("antes")
-            
-           
-            
-            self.moveit2.destroy_node()
-            #self.moveit2.wait_until_executed()
-            #self.moveit2.destroy_node()
-            self.get_logger().info("despues")
-            #traj.joint_names = self.joints
-            #traj.points = self.pos_wanted.points  # es la buena 
-            
-        
-            #traj.points = traj_aux.points
-            point = JointTrajectoryPoint()
-            point.positions = a.points
-            #point.time_from_start = Duration(sec=4)
-            traj.points.append(point)"""
-            #a = self.moveit2.plan(position=[-0.252, -0.118, 0.195], quat_xyzw=[0.570803357577419, 0.8205298265175397, -0.00518912143252199, 0.029789323459918908], cartesian=True)
-            #self.publisher_.publish(a)
-            
-            #if self.pos_wanted[3] < 1.15 and self.pos_wanted[3] > -2 :
-            self.call_gripper(1, 17, 24.0)
+        self.get_logger().info(f"Position received: [{self.pose_required.position.x},{self.pose_required.position.y},{self.pose_required.position.z}], quat_xyzw: [{self.pose_required.orientation.x},{self.pose_required.orientation.y},{self.pose_required.orientation.z},{self.pose_required.orientation.w}]")
 
 
-        elif self.check_starting_point and not self.joint_state_msg_received:
-            self.get_logger().warn(
-                'Start configuration could not be checked! Check "joint_state" topic!'
-            )
-        else:
-            self.get_logger().warn("Start configuration is not within configured limits!")
-
-    def joint_state_callback(self, msg): #investigar a fondo
+    def joint_state_callback(self, msg): #Joint state supervisor
 
         if not self.joint_state_msg_received:
 
@@ -182,8 +168,6 @@ def main(args=None):
     
     control_node = control_robot_master() #Ajuste de parámteros de las articulaciones del robot
     
-
-
     moveit2 = MoveIt2(
         node=control_node,
         joint_names=ur3e_model.joint_names(),
@@ -192,23 +176,34 @@ def main(args=None):
         group_name=ur3e_model.MOVE_GROUP_ARM,
         #callback_group=self.callback_group,
         )
-
         
     executor = rclpy.executors.MultiThreadedExecutor(2)
     executor.add_node(control_node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
-    
-        
-    moveit2.move_to_pose(position=[-0.252, -0.118, 0.195], quat_xyzw=[0.570803357577419, 0.8205298265175397, -0.00518912143252199, 0.029789323459918908], cartesian=False) #moveit mueve el robot
-    moveit2.wait_until_executed()  
-    
-    #control_node.call_gripper(1, 17, 24.0) #control abre la pinza
-    
-    moveit2.move_to_pose(position=[-0.1, -0.118, 0.195], quat_xyzw=[0.570803357577419, 0.8205298265175397, -0.00518912143252199, 0.029789323459918908], cartesian=False)
-    moveit2.wait_until_executed()
-    
 
+
+    while(1):
+
+        while control_node.pose_required_print().position.x != 0.0:
+            position_r = control_node.pose_required_print()
+
+            moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=False) #moveit mueve el robot
+            moveit2.wait_until_executed()
+
+            time.sleep(3)
+
+            #control_node.close_gripper() #control abre la pinza
+
+
+            moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=False) #moveit mueve el robot
+            moveit2.wait_until_executed()
+
+            #control_node.open_gripper() 
+
+            time.sleep(3)
+
+        
     rclpy.spin(control_node)
     control_node.destroy_node()
     rclpy.shutdown()
