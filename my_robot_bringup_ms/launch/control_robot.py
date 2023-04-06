@@ -27,12 +27,14 @@ def generate_launch_description():
             "Could not find the package" 
         )
         sys.exit(1)
+
+    get_package_share_directory("ur_bringup")
     
-    IncludeLaunchDescription(
+    a = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([
                     FindPackageShare('ur_bringup'),
-                    '/launch/ur_control.launch.py'
+                    "/home/mario/workspace/ros_ur_driver/src/Universal_Robots_ROS2_Driver/ur_bringup/launch",'ur_control.launch.py'
                 ])
             ]),
             launch_arguments={
@@ -59,6 +61,7 @@ def generate_launch_description():
 
     nodes_to_start = [
     	control_robot_node,
+        a,
     	
     ]   
 
