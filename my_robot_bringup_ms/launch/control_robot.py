@@ -45,6 +45,20 @@ def generate_launch_description():
                 'initial_joint_controller':'joint_trajectory_controller'
             }.items()
         )
+
+    moveit = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([
+                    FindPackageShare('ur_bringup'),
+                    "/home/mario/workspace/ros_ur_driver/src/Universal_Robots_ROS2_Driver/ur_bringup/launch",'ur_moveit.launch.py'
+                ])
+            ]),
+            launch_arguments={
+                'ur_type': 'ur3e',
+                'robot_ip': '192.168.20.35',
+                'launch_rviz':'true'
+            }.items()
+        )
     
     
     
@@ -62,6 +76,7 @@ def generate_launch_description():
     nodes_to_start = [
     	control_robot_node,
         a,
+        moveit,
     	
     ]   
 
