@@ -193,13 +193,13 @@ def main(args=None):
 
             time.sleep(3)
 
-            #control_node.close_gripper() #control abre la pinza
+            control_node.close_gripper() #control abre la pinza
 
 
             moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=False) #moveit mueve el robot
             moveit2.wait_until_executed()
 
-            #control_node.open_gripper() 
+            control_node.open_gripper() 
 
             time.sleep(3)
 
