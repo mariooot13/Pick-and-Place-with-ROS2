@@ -41,11 +41,14 @@ class ObjectDetector(Node):
         self.depth_distance_obj = 0
         self.medidas = []
 
-        #self.center = Point()
+        #centro destino imagen de 8 bits
+        self.dst_x = 0
+        self.dst_y = 0
 
         self.bridge = CvBridge()
-        self.centro_x = 0
-        self.centro_y = 0
+        
+        self.centro_x_24bits = 0
+        self.centro_y_24bits = 0
 
         # Distancia focal de la cámara RGB en metros
         self.focalLength = 0.00337
@@ -62,18 +65,29 @@ class ObjectDetector(Node):
 
     def def_depth(self, msg):
         #x, y = self.center.x, self.center.y
-        x, y = 320, 280
+        if self.dst_x != 0 and self.dst_y != 0:
+            x,y = self.dst_x, self.dst_y
+        else:
+            x, y = 320,200
+
         cv_image = self.bridge.imgmsg_to_cv2(msg, 'mono8')
         depth_val = get_distance_from_disparity(cv_image,x,y)
         cv2.circle(cv_image, (x, y), 20, (255, 255, 255), 2)
         cv2.imshow('Depth measurement', cv_image)
         cv2.waitKey(3)
 
+        #height, width = cv_image.shape
+        #self.get_logger().info(f"imagen de 8 bits: {width} x {height}")
+
         if depth_val is not None:
             self.medidas.append(depth_val)
 
         self.depth_distance_obj = depth_val
-        #self.get_logger().info(f"EL objeto se encuentra a {depth_val} cm de distancia de la camara")
+
+        #libero la posicion para el siguiente objeto a coger
+        self.dst_x = 0
+        self.dst_y = 0
+        
         
 
     def detect_object(self, msg):
@@ -84,20 +98,49 @@ class ObjectDetector(Node):
         green_lower = (30, 50, 50)
         green_upper = (70, 255, 255)
 
+        black_lower = (0, 0, 0)
+        black_upper = (180, 255, 30)
+
+        white_lower = (0, 0, 231)
+        white_upper = (180, 30, 255)
+
         # Aplicar una máscara binaria a la imagen HSV
-        mask = cv2.inRange(hsv_image, green_lower, green_upper)
+        mask = cv2.inRange(hsv_image, white_lower, white_upper)
         filtered_image = cv2.bitwise_and(cv_image, cv_image, mask=mask)
 
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
-            if w > 50 and h > 50:  # Adjust these values according to your object size
+            if w > 50 and h > 50:  # Adjust these values according to your object size 50,50
                 cv2.rectangle(cv_image, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                self.centro_x = x + w/2
-                self.centro_y = y + h/2
-                #self.get_logger().info(f"Coordenadas centro.x = {self.centro_x} y centro.y = {self.centro_y}")
-                #self.center.x = self.centro_x
-                #self.center.y = self.centro_y
+                #Coordenadas del objeto en la imgen a color de 24 bits
+                self.centro_x_24bits = x + w/2
+                self.centro_y_24bits = y + h/2
+                #self.get_logger().info(f"Coordenadas centro.x = {self.centro_x_24bits} y centro.y = {self.centro_y_24bits}")
+               
+                #height, width, channels = cv_image.shape
+                #self.get_logger().info(f"imagen de 24 bits: {width} x {height}")
+
+                # Tamaño de la imagen de origen
+                src_width = 1920
+                src_height = 1080
+
+                # Tamaño de la imagen de destino
+                dst_width = 640
+                dst_height = 400
+
+                # Posición en la imagen de origen
+                src_x = self.centro_x_24bits
+                src_y = self.centro_y_24bits
+
+                # Calcular la relación de escala
+                scale_x = dst_width / src_width
+                scale_y = dst_height / src_height
+
+                # Aplicar la relación de escala a la posición en la imagen de origen
+                self.dst_x = int(src_x * scale_x)
+                self.dst_y = int(src_y * scale_y)
+
 
 
         cv2.imshow('Object RGB Detector', cv_image)
