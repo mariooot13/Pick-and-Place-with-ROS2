@@ -43,7 +43,7 @@ class control_robot_master(Node):
 	
 	#Subscribers & Publishers
         self.pose_required = Pose()
-        self.subscriber_camera = self.create_subscription(Pose, "posicion_pedida",self.callback_recibo_pos_pedida, 10)
+        self.subscriber_camera = self.create_subscription(Pose, "object_position",self.callback_recibo_pos_pedida, 10)
         
    
 	#Safety joints
@@ -130,7 +130,11 @@ class control_robot_master(Node):
     def callback_recibo_pos_pedida(self, msg):
         self.pose_required.position.x = msg.position.x
         self.pose_required.position.y = msg.position.y
-        self.pose_required.position.z = msg.position.z
+
+        if msg.position.z < 0.3:
+            self.pose_required.position.z = msg.position.z
+        else:
+            self.pose_required.position.z = 0.139
    
         self.pose_required.orientation.x = msg.orientation.x
         self.pose_required.orientation.y = msg.orientation.y
@@ -185,10 +189,10 @@ def main(args=None):
 
     while(1):
 
-        while control_node.pose_required_print().position.x != 0.0:
+        while control_node.pose_required_print().position.x != 0.0 and control_node.pose_required_print().position.z < 0.3:
             position_r = control_node.pose_required_print()
 
-            moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=False) #moveit mueve el robot
+            moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
             moveit2.wait_until_executed()
 
             time.sleep(3)
@@ -199,7 +203,7 @@ def main(args=None):
             moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
             moveit2.wait_until_executed()
             
-            #time.sleep(3)
+            time.sleep(3)
             
             #moveit2.move_to_pose(position=[-0.126,-0.27,0.297], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
             #moveit2.wait_until_executed()

@@ -41,8 +41,8 @@ def generate_launch_description():
                 'ur_type': 'ur3e',
                 'robot_ip': '192.168.20.35',
                 'use_fake_hardware':'false',
-                'launch_rviz':'true'#,
-                #'initial_joint_controller':'joint_trajectory_controller'
+                'launch_rviz':'false',
+                'initial_joint_controller':'joint_trajectory_controller'
             }.items()
         )
 
