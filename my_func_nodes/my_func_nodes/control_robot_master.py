@@ -186,10 +186,13 @@ def main(args=None):
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
 
+    #contador = 0
+
 
     while(1):
 
         while control_node.pose_required_print().position.x != 0.0 and control_node.pose_required_print().position.z < 0.3:
+            #contador = contador + 1
             position_r = control_node.pose_required_print()
 
             moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
@@ -199,18 +202,20 @@ def main(args=None):
 
             control_node.close_gripper() 
 
+            time.sleep(1)
 
-            moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
+            moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) 
             moveit2.wait_until_executed()
-            
-            time.sleep(3)
-            
-            #moveit2.move_to_pose(position=[-0.126,-0.27,0.297], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
-            #moveit2.wait_until_executed()
-            
-            #[0.17,-0.347,0.246]
-            
+
+            time.sleep(1)
+
+            moveit2.move_to_pose(position=[-0.251,-0.129,0.236], quat_xyzw=position_r.orientation, cartesian=False)
+            moveit2.wait_until_executed()
+
             control_node.open_gripper() 
+
+            moveit2.move_to_pose(position=[-0.251,-0.129,0.35], quat_xyzw=position_r.orientation, cartesian=False)
+            moveit2.wait_until_executed()
 
             time.sleep(3)
 

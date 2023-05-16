@@ -60,7 +60,7 @@ class ObjectDetector(Node):
 
         self.position_x_to_robot = 0.00
         self.position_y_to_robot = 0.00
-        #self.position_z_to_robot = []
+        self.position_z_to_robot = 0.00
 
         # Distancia focal de la cámara RGB en metros
         self.focalLength = 0.00337
@@ -68,13 +68,17 @@ class ObjectDetector(Node):
         # Altura real del objeto en cm
         self.realHeight = 0.074
 
+        self.mask_high = (30, 50, 50)
+        self.mask_low = (70, 255, 255)
+
     def publish_news(self):
  
         msg = Pose()
         
         msg.position.x = self.position_x_to_robot * 0.01
         msg.position.y = self.position_y_to_robot * 0.01
-        msg.position.z = 0.139 #self.position_z_to_robot
+        #msg.position.z = 0.139 
+        msg.position.z = float(self.position_z_to_robot) * 0.001
         
         msg.orientation.x = self.quaternion[0]
         msg.orientation.y = self.quaternion[1]
@@ -93,7 +97,8 @@ class ObjectDetector(Node):
 
         media = sum(self.medidas) / len(self.medidas)
         self.get_logger().info(f"EL objeto se encuentra a {self.depth_distance_obj} cm de distancia de la camara")
-
+        #Ajustar
+        self.position_z_to_robot = 54.4 - self.depth_distance_obj #54 seria la distancia al suelo - lo que mide ejempl 52 -> 2 cm ejemplo desde el suelo
         self.medidas = []
 
     def def_depth(self, msg):
@@ -127,6 +132,13 @@ class ObjectDetector(Node):
     def detect_object(self, msg):
         cv_image = self.bridge.imgmsg_to_cv2(msg, 'bgr8')
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+        """
+        try:
+            cv2.imshow('Object RGB Detector', cv_image)
+        except:
+    # Manejo de excepciones si ocurre alguna
+            cv2.imshow('Object RGB Detector', cv_image)
+        """
         
         # Definir el rango de valores HSV para el color verde
         green_lower = (30, 50, 50)
@@ -138,8 +150,36 @@ class ObjectDetector(Node):
         white_lower = (0, 0, 231)
         white_upper = (180, 30, 255)
 
+        orange_lower = (10, 100, 20)
+        orange_upper = (25, 255, 255)
+
+        dark_blue_lower = (90, 50, 50)
+        dark_blue_upper = (120, 255, 255)
+
+        red_lower = (0, 50, 50)
+        red_upper = (10, 255, 255)
+
+        yellow_lower = (25, 100, 50)
+        yellow_upper = (35, 255, 255)
+        
+        a = input("dime que color quieres detectar: rojo, verde, amarillo")
+
+        #Corregir
+
+        if a == "rojo":
+            self.mask_high = red_upper
+            self.mask_low = red_lower
+
+        elif a == "verde":
+            self.mask_high = green_upper
+            self.mask_low = green_lower
+
+        elif a == "amarillo":
+            self.mask_high = yellow_upper
+            self.mask_low = yellow_lower
+        
         # Aplicar una máscara binaria a la imagen HSV
-        mask = cv2.inRange(hsv_image, green_lower, green_upper)
+        mask = cv2.inRange(hsv_image, self.mask_low , self.mask_high)
         filtered_image = cv2.bitwise_and(cv_image, cv_image, mask=mask)
 
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -153,9 +193,9 @@ class ObjectDetector(Node):
                 #self.get_logger().info(f"Coordenadas centro.x = {self.centro_x_24bits} y centro.y = {self.centro_y_24bits}")
                
                 #height, width, channels = cv_image.shape
-                self.get_logger().info(f"ancho {w} alto {h}")
+                
 
-                self.get_logger().info(f"ancho del objeto: {w} y altura del objeto: {h}") #ancho 77 que son 24 mm y altura 216 que son 74 mm
+                #self.get_logger().info(f"ancho del objeto: {w} y altura del objeto: {h}") #ancho 77 que son 24 mm y altura 216 que son 74 mm
 
                 factor_escala = 2.40 / w #centimetros por pixeles
 
@@ -174,12 +214,12 @@ class ObjectDetector(Node):
                 centro_cm_x = factor_escala * src_x
                 centro_cm_y = factor_escala * src_y
 
-                self.get_logger().info(f"centro de la camara en x{centro_cm_x}, centro de la camara en y {centro_cm_y}")
+                #self.get_logger().info(f"centro de la camara en x{centro_cm_x}, centro de la camara en y {centro_cm_y}")
 
-                centro_robot_cm_x = - 47.8 + centro_cm_x
-                centro_robot_cm_y = - 15 - centro_cm_y
+                centro_robot_cm_x = - 49 + centro_cm_x
+                centro_robot_cm_y = - 20 - centro_cm_y
 
-                self.get_logger().info(f"centro de la camara en x{centro_robot_cm_x}, centro de la camara en y {centro_robot_cm_y}")
+                #self.get_logger().info(f"centro de la camara en x{centro_robot_cm_x}, centro de la camara en y {centro_robot_cm_y}")
                     
                 # Calcular la relación de escala
                 scale_x = dst_width / src_width
@@ -196,7 +236,7 @@ class ObjectDetector(Node):
                 
 
 
-        cv2.imshow('Object RGB Detector', cv_image)
+        #cv2.imshow('Object RGB Detector', cv_image)
         cv2.waitKey(3)
 
 
