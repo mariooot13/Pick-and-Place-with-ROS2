@@ -195,6 +195,11 @@ def main(args=None):
             #contador = contador + 1
             position_r = control_node.pose_required_print()
 
+            moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
+            moveit2.wait_until_executed()
+
+            time.sleep(2)
+
             moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
             moveit2.wait_until_executed()
 
@@ -214,10 +219,15 @@ def main(args=None):
 
             control_node.open_gripper() 
 
-            moveit2.move_to_pose(position=[-0.251,-0.129,0.35], quat_xyzw=position_r.orientation, cartesian=False)
+            moveit2.move_to_pose(position=[-0.251,-0.129,0.35], quat_xyzw=position_r.orientation, cartesian=True)
             moveit2.wait_until_executed()
 
-            time.sleep(3)
+            time.sleep(2)
+
+            moveit2.move_to_pose(position=[-0.155,-0.267,0.28], quat_xyzw=position_r.orientation, cartesian=True)
+            moveit2.wait_until_executed()
+
+            time.sleep(1)
 
         
     rclpy.spin(control_node)
