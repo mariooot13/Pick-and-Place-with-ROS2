@@ -46,6 +46,8 @@ class ObjectDetector(Node):
 
         self.timer = self.create_timer(4, self.actualizar_distance_depth) 
 
+        self.timer = self.create_timer(25, self.change_color) ##22
+
         self.depth_distance_obj = 0
         self.medidas = []
 
@@ -71,6 +73,13 @@ class ObjectDetector(Node):
         self.mask_high = (30, 50, 50)
         self.mask_low = (70, 255, 255)
 
+        self.counter = 0
+
+        self.a = input("dime la secuencia de colores que deseas: azul (a), verde (v), naranja(n), rojo(r) : ")
+
+    def change_color(self):
+        self.counter = self.counter + 1
+
     def publish_news(self):
  
         msg = Pose()
@@ -79,8 +88,14 @@ class ObjectDetector(Node):
         msg.position.y = self.position_y_to_robot * 0.001
         #msg.position.z = 0.139 
         if self.position_z_to_robot > 0:
-            msg.position.z = float(self.position_z_to_robot) * 0.01
+            if self.position_z_to_robot > 61.5:
+                msg.position.z = 0.139 
+            else:
+                msg.position.z = float(self.position_z_to_robot) * 0.01
         else:
+            msg.position.z = 0.139
+
+        if msg.position.z < 0.139:
             msg.position.z = 0.139 
         
         msg.orientation.x = self.quaternion[0]
@@ -90,6 +105,8 @@ class ObjectDetector(Node):
 
 
         self.publisher_.publish(msg)
+
+        #self.counter = self.counter + 1
         
         self.get_logger().info("Mandando posicion {},{},{}".format(msg.position.x, msg.position.y, msg.position.z))
 
@@ -101,7 +118,7 @@ class ObjectDetector(Node):
         media = sum(self.medidas) / len(self.medidas)
         self.get_logger().info(f"EL objeto se encuentra a {self.depth_distance_obj} cm de distancia de la camara")
         #Ajustar
-        self.position_z_to_robot =  13 + (61.51  - (self.depth_distance_obj + 0.7))  #61.51 al suelo, -13 pinza. habia 63
+        self.position_z_to_robot =  13 + (62.5  - (self.depth_distance_obj + 0.8))  #61.51 al suelo, -13 pinza. habia 63  0.176
         self.medidas = []
 
     def def_depth(self, msg):
@@ -113,7 +130,7 @@ class ObjectDetector(Node):
 
         cv_image = self.bridge.imgmsg_to_cv2(msg, 'mono8')
         depth_val = get_distance_from_disparity(cv_image,x,y)
-        cv2.circle(cv_image, (x, y), 20, (255, 255, 255), 2)
+        cv2.circle(cv_image, (x, y), 3, (255, 255, 255), 2)
         #cv2.circle(cv_image, (0, 0), 20, (255, 255, 255), 2)
         cv2.imshow('Depth measurement', cv_image)
         cv2.waitKey(3)
@@ -166,29 +183,44 @@ class ObjectDetector(Node):
         dark_blue_lower = (90, 50, 50)
         dark_blue_upper = (120, 255, 255)
 
-        red_lower = (0, 50, 50)
-        red_upper = (10, 255, 255)
+        morado_lower = (135, 50, 50)
+        morado_upper = (160, 255, 255)
 
         yellow_lower = (25, 100, 50)
         yellow_upper = (35, 255, 255)
 
-        blue_lower = (90, 100, 100)
-        blue_upper = (150, 255, 255)
+        blue_lower = (90, 100, 90)
+        blue_upper = (130, 255, 255)
 
-        orange_lower = (5, 100, 100)
-        orange_upper = (25, 255, 255)
-        
-        #a = input("dime que color quieres detectar: azul, verde, amarillo")
+        orange_lower = (0, 100, 100)
+        orange_upper = (20, 255, 255)
 
+        #self.mask_high = green_upper
+        #self.mask_low = green_lower
+       
         #Corregir
+        if self.a[self.counter] == "a":
+            self.mask_high = blue_upper
+            self.mask_low = blue_lower
 
+        elif self.a[self.counter] == "v":
+            self.mask_high = green_upper
+            self.mask_low = green_lower
 
-        #elif a == "naranja":
-        #    self.mask_high = orange_upper
-        #    self.mask_low = orange_lower
+        elif self.a[self.counter] == "n":
+            self.mask_high = orange_upper
+            self.mask_low = orange_lower
+
+        elif self.a[self.counter] == "m":
+            self.mask_high = morado_upper
+            self.mask_low = morado_lower
         
-        self.mask_high = green_upper
-        self.mask_low = green_lower
+
+        if(self.counter == len(self.a)):
+            self.counter = 0
+        
+        #self.mask_high = green_upper
+        #self.mask_low = green_lower
         
         # Aplicar una máscara binaria a la imagen HSV
         mask = cv2.inRange(hsv_image, self.mask_low , self.mask_high)
@@ -200,7 +232,7 @@ class ObjectDetector(Node):
             if w > 60 and h > 100 and w < 100 and h < 250:  # Adjust these values according to your object size 50,50
                 cv2.rectangle(cv_image, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 #Coordenadas del objeto en la imgen a color de 24 bits
-                self.centro_x_24bits = x - w/2 #importante
+                self.centro_x_24bits = x - w/2 - w/4#importante
                 self.centro_y_24bits = y + h/2
                 #self.get_logger().info(f"Coordenadas centro.x = {self.centro_x_24bits} y centro.y = {self.centro_y_24bits}")
                 #self.get_logger().info(f"ancho del objeto: {w} y altura del objeto: {h}") #ancho 77 que son 24 mm y altura 216 que son 74 mm
@@ -229,8 +261,8 @@ class ObjectDetector(Node):
 
                 
 
-                centro_robot_cm_x = - 500 + centro_cm_x * 10
-                centro_robot_cm_y = - 156 - centro_cm_y * 10 
+                centro_robot_cm_x = - 534 + centro_cm_x * 10
+                centro_robot_cm_y = - 141 - centro_cm_y * 10 
 
                 #self.get_logger().info(f"centro de la camara en x{centro_robot_cm_x}, centro de la camara en y {centro_robot_cm_y}")
                     
@@ -247,9 +279,6 @@ class ObjectDetector(Node):
                 self.position_x_to_robot = float(centro_robot_cm_x)
                 self.position_y_to_robot = float(centro_robot_cm_y)
                 
-                
-
-
         cv2.imshow('Object RGB Detector', cv_image)
         cv2.waitKey(3)
 

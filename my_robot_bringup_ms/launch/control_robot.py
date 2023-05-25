@@ -72,7 +72,7 @@ def generate_launch_description():
             )
     
     
-    
+    """
     control_robot_node = Node(
                 package="my_func_nodes",
                 executable="control_robot_exec",
@@ -83,9 +83,9 @@ def generate_launch_description():
                     "stderr": "screen",
                 },
             )
-
+    """
     nodes_to_start = [
-    	control_robot_node,
+    	#control_robot_node,
         a,
         moveit,
         camera,
