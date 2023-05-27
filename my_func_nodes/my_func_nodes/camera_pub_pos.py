@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
+from std_msgs.msg import String
 
 from cv_bridge import CvBridge
 import cv2
@@ -41,6 +42,8 @@ class ObjectDetector(Node):
         self.publisher_ = self.create_publisher(Pose, "object_position", 10)
         self.timer_ = self.create_timer(7, self.publish_news)
 
+        self.subscriber_sec_colores = self.create_subscription(String, "sec_color", self.actualizar_sec_colores, 10) #subsrciber interfaz sec_colores
+
         
         self.quaternion = [0.570803357577419, 0.8205298265175397, -0.00518912143252199, 0.029789323459918908]
 
@@ -75,7 +78,14 @@ class ObjectDetector(Node):
 
         self.counter = 0
 
-        self.a = input("dime la secuencia de colores que deseas: azul (a), verde (v), naranja(n), rojo(r) : ")
+        self.sec_color = String()
+
+        #antes: self. = input("") = "avnm"
+        
+
+    def actualizar_sec_colores(self, msg):
+        self.sec_color = msg.data
+        self.get_logger().info(f"{self.sec_color}")
 
     def change_color(self):
         self.counter = self.counter + 1
@@ -199,19 +209,19 @@ class ObjectDetector(Node):
         #self.mask_low = green_lower
        
         #Corregir
-        if self.a[self.counter] == "a":
+        if self.sec_color[self.counter] == "a":
             self.mask_high = blue_upper
             self.mask_low = blue_lower
 
-        elif self.a[self.counter] == "v":
+        elif self.sec_color[self.counter] == "v":
             self.mask_high = green_upper
             self.mask_low = green_lower
 
-        elif self.a[self.counter] == "n":
+        elif self.sec_color[self.counter] == "n":
             self.mask_high = orange_upper
             self.mask_low = orange_lower
 
-        elif self.a[self.counter] == "m":
+        elif self.sec_color[self.counter] == "m":
             self.mask_high = morado_upper
             self.mask_low = morado_lower
         

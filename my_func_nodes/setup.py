@@ -23,7 +23,7 @@ setup(
         "control_robot_exec = my_func_nodes.control_robot_master:main",
         "camera_exec = my_func_nodes.camera:main",
 	"camera_detection = my_func_nodes.camera_pub_pos:main",
-	""
+	"interfaz_exec = my_func_nodes.interfaz_menu:main"
         ],
     },
 )

@@ -10,7 +10,7 @@ from threading import Thread
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Float64MultiArray, String
+from std_msgs.msg import Float64MultiArray, String, Int8
 
 from functools import partial
 from ur_msgs.srv import SetIO
@@ -19,6 +19,10 @@ from my_moveit2_py.Moveit2_resources import MoveIt2 #own resources
 from my_moveit2_py import ur3e_model #own resources
 
 from rclpy.callback_groups import ReentrantCallbackGroup
+
+import tkinter as tk
+from PIL import Image,ImageTk
+from tkinter import font
 
 class control_robot_master(Node):
     def __init__(self):
@@ -39,11 +43,17 @@ class control_robot_master(Node):
         self.get_logger().info(
             'LETSGO')
         self.inp = None    
-        #self.callback_group = ReentrantCallbackGroup()
+        
+        self.respuesta = 0 #NEW
+
+        self.sec_color = "" #NEW
 	
 	#Subscribers & Publishers
         self.pose_required = Pose()
         self.subscriber_camera = self.create_subscription(Pose, "object_position",self.callback_recibo_pos_pedida, 10)
+
+        #subsrciber respuesta de la interfaz
+        self.subscriber_respuesta_menu = self.create_subscription(Int8, "resp_aplicacion",self.actualizar_respuesta, 10)
         
    
 	#Safety joints
@@ -79,6 +89,9 @@ class control_robot_master(Node):
 	
         #self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
         #self.timer = self.create_timer(4, self.timer_callback)
+
+    def actualizar_respuesta(self, msg):
+        self.respuesta = msg.data
 
 
     #PINZA:
@@ -186,37 +199,13 @@ def main(args=None):
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
 
-    #contador = 0
-
     control_node.get_logger().info("Buenas, bienvenido!\nA continuacion va a poder elegir entre diferentes aplicaciones de Pick and Place \nOpcion 1: Coger las piezas por orden y depositarlas en casa \nOpcion 2: Ordenar las piezas por colores y depositarlas \nOpcion 3: Apilar piezas del mismo color \n")
 
-    response = int(input("Introduca su opcion: \n"))
 
-    """
-    strings = []
-
-    publisher = control_node.create_publisher(String, 'colores', 10)
-
-    
-
-    def timer_callback_colores():
+    while(control_node.respuesta == 1 or control_node.respuesta == 2 or control_node.respuesta == 3):
         
-        if (counter == 2):
-            counter = 0
-        msg = String()
-        msg = strings[counter]
-        publisher.publish(msg)
-        counter += 1
-
-    timer_period = 5.0
-    timer = control_node.create_timer(timer_period, timer_callback_colores)
-
-    """
-
-    while(response == 1 or response == 2 or response == 3):
-        
-        if(response == 1):
-            control_node.get_logger().info(f"respuesta: {response}")
+        if(control_node.respuesta == 1):
+            control_node.get_logger().info(f"respuesta: {control_node.respuesta}")
             
             time.sleep(3)
             #input("Introduce tres colores seguidos en orden: green/orange/red\n"))
@@ -260,8 +249,8 @@ def main(args=None):
 
                 time.sleep(1)
 
-        if(response == 2):
-            control_node.get_logger().info(f"respuesta: {response}")
+        if(control_node.respuesta == 2):
+            control_node.get_logger().info(f"respuesta: {control_node.respuesta}")
 
             
             time.sleep(3)
@@ -336,7 +325,7 @@ def main(args=None):
                     moveit2.move_to_pose(position=[0.015,-0.395,0.163], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
                     moveit2.wait_until_executed()
 
-                    
+        
 
 
                 time.sleep(2)
@@ -359,10 +348,6 @@ def main(args=None):
 
                 if contador == 4:
                     contador = 0
-
-                
-
-                    
 
         
     rclpy.spin(control_node)
