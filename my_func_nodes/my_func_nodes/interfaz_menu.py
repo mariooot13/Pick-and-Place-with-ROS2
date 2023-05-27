@@ -21,6 +21,10 @@ class interfaz_menu(Node):
         self.ventana.title("Pick and Place con UR3e y visión") 
         self.ventana.configure(bg="#FFFFFF") 
 
+        self.robot_imagen = Image.open("/home/mario/workspace/ros_ur_driver/src/my_func_nodes/resource/robot.jpeg")
+        self.robot_imagen = self.robot_imagen.resize((400, 488))
+        self.imagen_tk_robot = ImageTk.PhotoImage(self.robot_imagen)
+
         self.imagen_v = Image.open("/home/mario/workspace/ros_ur_driver/src/my_func_nodes/resource/verde.png")  # Reemplaza "imagen.jpg" con la ruta y nombre de tu imagen en formato JPEG
         self.imagen_v = self.imagen_v.resize((10000, 4000)) 
         self.imagen_tk_v = ImageTk.PhotoImage(self.imagen_v)
@@ -50,26 +54,35 @@ class interfaz_menu(Node):
         #imagen_tk_ap3 = ImageTk.PhotoImage(imagen_ap3)
 
         # Establecer el tamaño de la ventana
-        self.ventana.geometry("1000x500")  # Ancho x Alto
+        self.ventana.geometry("1400x500")  # Ancho x Alto
 
         # Agregar widgets a la ventana
-        self.etiqueta1 = tk.Label(self.ventana, text="Buenas, bienvenido!\nA continuacion va a poder elegir entre diferentes aplicaciones de Pick and Place ",bg="#FFFDD0")
-        self.etiqueta1.place(x=230, y=6)
+        self.etiqueta_robot = tk.Label(self.ventana, image=self.imagen_tk_robot)
+        self.etiqueta_robot.place(x= 5, y = 5)
 
-        self.etiqueta_color = tk.Label(self.ventana, text="Seleccione los colores por orden de las piezas a recoger. ¡Un solo click!",bg="#FFFDD0")
-        self.etiqueta_color.place(x=260, y=60)
+        self.etiqueta0 = tk.Label(self.ventana, text="        BIENVENIDO        ",font=("Arial", 18, "bold"),bg="#333333",fg="white")
+        self.etiqueta0.place(x=780, y=10)
 
-        self.etiqueta_ap1 = tk.Label(self.ventana, text="Aplicacion 1: Ordenado de piezas",bg="#FFFDD0")
-        self.etiqueta_ap1.place(x=133, y=250)
+        self.etiqueta1 = tk.Label(self.ventana, text="        A continuación, va a poder elegir entre diferentes aplicaciones de PICK & PLACE        ",font=("Arial", 15, "bold"),bg="#333333",fg="white")
+        self.etiqueta1.place(x=460, y=50)
 
-        self.etiqueta_ap2= tk.Label(self.ventana, text="Aplicacion  2: Paletizado",bg="#FFFDD0")
-        self.etiqueta_ap2.place(x=415, y=250)
+        self.etiqueta_color = tk.Label(self.ventana, text="     Seleccione los colores por orden de las piezas a recoger.     ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_color.place(x=469, y=140)
 
-        self.etiqueta_ap3= tk.Label(self.ventana, text="Aplicacion  3: Despaletizado",bg="#FFFDD0")
-        self.etiqueta_ap3.place(x=650, y=250)
+        self.etiqueta_color_2 = tk.Label(self.ventana, text="     ¡Haga un click por color!                                                      ----->     ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_color_2.place(x=469, y=170)
 
-        self.etiqueta_op= tk.Label(self.ventana, text="Seleccione una opción por favor:",bg="#FFFDD0")
-        self.etiqueta_op.place(x=390, y=215)
+        self.etiqueta_ap1 = tk.Label(self.ventana, text="  Aplicación 1: Ordenado de piezas  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_ap1.place(x=447, y=455)
+
+        self.etiqueta_ap2= tk.Label(self.ventana, text="  Aplicación  2: Paletizado  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_ap2.place(x=801, y=455)
+
+        self.etiqueta_ap3= tk.Label(self.ventana, text="  Aplicación  3: Despaletizado  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_ap3.place(x=1118, y=455)
+
+        self.etiqueta_op= tk.Label(self.ventana, text="     Seleccione una opción por favor:     ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_op.place(x=469, y=255)
 
         self.boton1 = tk.Button(self.ventana, image=self.imagen_tk_ap1, width=200, height=140, command=self.respuesta_1)
         self.boton2 = tk.Button(self.ventana, image=self.imagen_tk_ap2, width=200, height=140, command=self.respuesta_2)
@@ -79,13 +92,13 @@ class interfaz_menu(Node):
         self.boton6 = tk.Button(self.ventana, image=self.imagen_tk_v, width=100, height=70,command=self.color_verde)
         self.boton7 = tk.Button(self.ventana,  image=self.imagen_tk_a, width=100, height=70,command=self.color_azul)
         # Posicionar los botones usando el método pack()
-        self.boton1.place(x=140, y=280)  # Arriba
-        self.boton2.place(x=395, y=280) # Izquierda
-        self.boton3.place(x=650, y=280)  # Derecha
-        self.boton4.place(x=140, y=100)  # Abajo
-        self.boton5.place(x=340, y=100)  # Por defecto, se posiciona en orden
-        self.boton6.place(x=540, y=100) 
-        self.boton7.place(x=740, y=100) 
+        self.boton1.place(x=483, y=300)  # Arriba
+        self.boton2.place(x=800, y=300) # Izquierda
+        self.boton3.place(x=1144, y=300)  # Derecha
+        self.boton4.place(x=1117, y=95)  # Abajo
+        self.boton5.place(x=1227, y=95)  # Por defecto, se posiciona en orden
+        self.boton6.place(x=1227, y=175) 
+        self.boton7.place(x=1117, y=175) 
         self.get_logger().info(f"jejeejejej{self.respuesta}")
 
         # Iniciar el bucle principal de Tkinter
