@@ -92,6 +92,12 @@ class control_robot_master(Node):
 
     def actualizar_respuesta(self, msg):
         self.respuesta = msg.data
+        #self.get_logger().info(f"{self.respuesta}")
+
+    def resp_required(self):
+        if self.respuesta is not None:
+            return self.respuesta
+            
 
 
     #PINZA:
@@ -179,10 +185,14 @@ class control_robot_master(Node):
         else:
             return
 
-
+"""
+def callback(msg, respuesta):
+    respuesta = msg.data
+"""
 def main(args=None):
     rclpy.init(args=args)
     contador = 0
+    respuesta = 0
     control_node = control_robot_master() #Ajuste de parámteros de las articulaciones del robot
     
     moveit2 = MoveIt2(
@@ -199,18 +209,26 @@ def main(args=None):
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
 
+
     control_node.get_logger().info("Buenas, bienvenido!\nA continuacion va a poder elegir entre diferentes aplicaciones de Pick and Place \nOpcion 1: Coger las piezas por orden y depositarlas en casa \nOpcion 2: Ordenar las piezas por colores y depositarlas \nOpcion 3: Apilar piezas del mismo color \n")
 
-
-    while(control_node.respuesta == 1 or control_node.respuesta == 2 or control_node.respuesta == 3):
+   
+    respuesta = control_node.resp_required()
+    
+    while respuesta == 0:
         
-        if(control_node.respuesta == 1):
-            control_node.get_logger().info(f"respuesta: {control_node.respuesta}")
+        respuesta = control_node.resp_required()
+    
+    
+    while(respuesta == 1 or respuesta == 2 or respuesta == 3):
+        
+        if(respuesta == 1):
+            control_node.get_logger().info(f"respuesta: {respuesta}")
             
             time.sleep(3)
             #input("Introduce tres colores seguidos en orden: green/orange/red\n"))
 
-            while control_node.pose_required_print().position.x != 0.0 and control_node.pose_required_print().position.z < 0.3:
+            while control_node.pose_required_print().position.x != 0.0 and control_node.pose_required_print().position.y != 0.0 and control_node.pose_required_print().position.z < 0.3:
                 #contador = contador + 1
                 control_node.get_logger().info("HEY Aplicacion 1")
                 position_r = control_node.pose_required_print()
@@ -249,8 +267,8 @@ def main(args=None):
 
                 time.sleep(1)
 
-        if(control_node.respuesta == 2):
-            control_node.get_logger().info(f"respuesta: {control_node.respuesta}")
+        if(respuesta == 2):
+            control_node.get_logger().info(f"respuesta robot: {respuesta}")
 
             
             time.sleep(3)
@@ -269,7 +287,7 @@ def main(args=None):
                 moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
                 moveit2.wait_until_executed()
 
-                time.sleep(3)
+                time.sleep(1)
 
                 control_node.close_gripper() 
 
@@ -283,46 +301,46 @@ def main(args=None):
                 control_node.get_logger().info(f"{contador}")
 
                 if contador == 0:
-                    moveit2.move_to_pose(position=[-0.009,-0.408,0.239], quat_xyzw=position_r.orientation, cartesian=True)
-                    moveit2.wait_until_executed()
-
-                    
-
-                    moveit2.move_to_pose(position=[-0.009,-0.408,0.139], quat_xyzw=position_r.orientation, cartesian=True)
-                    moveit2.wait_until_executed()
-
-                elif contador == 1:
-
-                    moveit2.move_to_pose(position=[0.04,-0.408,0.239], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.move_to_pose(position=[-0.011,-0.408,0.239], quat_xyzw=position_r.orientation, cartesian=True)
                     moveit2.wait_until_executed()
 
                     time.sleep(1)
 
-                    moveit2.move_to_pose(position=[0.04,-0.408,0.145], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.move_to_pose(position=[-0.011,-0.408,0.144], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.wait_until_executed()
+
+                elif contador == 1:
+
+                    moveit2.move_to_pose(position=[0.04,-0.410,0.239], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.wait_until_executed()
+
+                    time.sleep(1)
+
+                    moveit2.move_to_pose(position=[0.04,-0.410,0.144], quat_xyzw=position_r.orientation, cartesian=True)
                     moveit2.wait_until_executed()
 
                     
 
                 elif contador == 2:
 
-                    moveit2.move_to_pose(position=[0.015,-0.450,0.239], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
+                    moveit2.move_to_pose(position=[0.015,-0.39,0.239], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
                     moveit2.wait_until_executed()
 
                     time.sleep(1)
 
-                    moveit2.move_to_pose(position=[0.015,-0.450,0.163], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
+                    moveit2.move_to_pose(position=[0.015,-0.39,0.155], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
                     moveit2.wait_until_executed()
 
                     
 
                 elif contador == 3:
 
-                    moveit2.move_to_pose(position=[0.015,-0.395,0.239], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
+                    moveit2.move_to_pose(position=[0.015,-0.442,0.239], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
                     moveit2.wait_until_executed()
 
                     time.sleep(1)
 
-                    moveit2.move_to_pose(position=[0.015,-0.395,0.163], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
+                    moveit2.move_to_pose(position=[0.015,-0.442,0.155], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
                     moveit2.wait_until_executed()
 
         
@@ -345,6 +363,77 @@ def main(args=None):
                 time.sleep(1)
 
                 contador = contador + 1
+
+                if contador == 4:
+                    contador = 0
+
+        if(respuesta == 3):
+            control_node.get_logger().info(f"respuesta robot: {respuesta}")
+
+            
+            time.sleep(3)
+            #input("Introduce tres colores seguidos en orden: green/orange/red\n"))
+
+            while control_node.pose_required_print().position.x != 0.0 and control_node.pose_required_print().position.z < 0.3:
+                #contador = contador + 1
+                control_node.get_logger().info("HEY: Aplicacion 2")
+                position_r = control_node.pose_required_print()
+
+                if contador == 0 or contador == 1:
+
+                    moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
+                    moveit2.wait_until_executed()
+
+                    time.sleep(2)
+
+                    moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
+                    moveit2.wait_until_executed()
+
+                    time.sleep(1)
+
+                    control_node.close_gripper() 
+
+                    time.sleep(2)
+
+                    moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) 
+                    moveit2.wait_until_executed()
+
+                    time.sleep(2)
+
+                    moveit2.move_to_pose(position=[-0.155,-0.267,0.28], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.wait_until_executed()
+
+                    time.sleep(3)
+
+                    control_node.get_logger().info(f"{contador}")
+
+                else:
+
+                    moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
+                    moveit2.wait_until_executed()
+
+                    time.sleep(2)
+
+                    moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
+                    moveit2.wait_until_executed()
+
+                    time.sleep(1)
+
+                    control_node.close_gripper() 
+
+                    time.sleep(1)
+
+                    moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) 
+                    moveit2.wait_until_executed()
+
+                    time.sleep(1)
+
+                    moveit2.move_to_pose(position=[-0.155,-0.267,0.28], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.wait_until_executed()
+
+                    time.sleep(1)
+
+                    control_node.get_logger().info(f"{contador}")
 
                 if contador == 4:
                     contador = 0

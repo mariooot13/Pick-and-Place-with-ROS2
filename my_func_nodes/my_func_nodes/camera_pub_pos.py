@@ -78,14 +78,16 @@ class ObjectDetector(Node):
 
         self.counter = 0
 
-        self.sec_color = String()
+        #self.sec_color = String()
+        self.sec_color = ""
 
         #antes: self. = input("") = "avnm"
         
 
     def actualizar_sec_colores(self, msg):
         self.sec_color = msg.data
-        self.get_logger().info(f"{self.sec_color}")
+        self.get_logger().info(f"funcion {self.sec_color}")
+        
 
     def change_color(self):
         self.counter = self.counter + 1
@@ -125,7 +127,7 @@ class ObjectDetector(Node):
    
     def actualizar_distance_depth(self):
 
-        media = sum(self.medidas) / len(self.medidas)
+        #media = sum(self.medidas) / len(self.medidas)
         self.get_logger().info(f"EL objeto se encuentra a {self.depth_distance_obj} cm de distancia de la camara")
         #Ajustar
         self.position_z_to_robot =  13 + (62.5  - (self.depth_distance_obj + 0.8))  #61.51 al suelo, -13 pinza. habia 63  0.176
@@ -204,29 +206,32 @@ class ObjectDetector(Node):
 
         orange_lower = (0, 100, 100)
         orange_upper = (20, 255, 255)
-
+        
         #self.mask_high = green_upper
         #self.mask_low = green_lower
-       
         #Corregir
-        if self.sec_color[self.counter] == "a":
-            self.mask_high = blue_upper
-            self.mask_low = blue_lower
-
-        elif self.sec_color[self.counter] == "v":
-            self.mask_high = green_upper
-            self.mask_low = green_lower
-
-        elif self.sec_color[self.counter] == "n":
-            self.mask_high = orange_upper
-            self.mask_low = orange_lower
-
-        elif self.sec_color[self.counter] == "m":
-            self.mask_high = morado_upper
-            self.mask_low = morado_lower
+        self.get_logger().info(f"algoritmo {self.sec_color}")
+        self.get_logger().info(f"algoritmo {self.counter}")
         
+        if len(self.sec_color) == 4 and self.counter < 5:
+            if self.sec_color[self.counter] == "a":
+                self.mask_high = blue_upper
+                self.mask_low = blue_lower
 
-        if(self.counter == len(self.a)):
+            elif self.sec_color[self.counter] == "v":
+                self.mask_high = green_upper
+                self.mask_low = green_lower
+
+            elif self.sec_color[self.counter] == "n":
+                self.mask_high = orange_upper
+                self.mask_low = orange_lower
+
+            elif self.sec_color[self.counter] == "m":
+                self.mask_high = morado_upper
+                self.mask_low = morado_lower
+            
+
+        if(self.counter == len(self.sec_color)):
             self.counter = 0
         
         #self.mask_high = green_upper
@@ -288,7 +293,7 @@ class ObjectDetector(Node):
                 
                 self.position_x_to_robot = float(centro_robot_cm_x)
                 self.position_y_to_robot = float(centro_robot_cm_y)
-                
+            
         cv2.imshow('Object RGB Detector', cv_image)
         cv2.waitKey(3)
 
