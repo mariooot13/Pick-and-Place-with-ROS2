@@ -241,7 +241,7 @@ def main(args=None):
                 moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
                 moveit2.wait_until_executed()
 
-                time.sleep(3)
+                time.sleep(1)
 
                 control_node.close_gripper() 
 
@@ -255,6 +255,25 @@ def main(args=None):
                 moveit2.move_to_pose(position=[-0.251,-0.129,0.236], quat_xyzw=position_r.orientation, cartesian=False)
                 moveit2.wait_until_executed()
 
+                if contador == 0:
+                    moveit2.move_to_pose(position=[-0.251,-0.129,0.152], quat_xyzw=position_r.orientation, cartesian=False)
+                    moveit2.wait_until_executed()
+
+                elif contador == 1:
+                    moveit2.move_to_pose(position=[-0.251,-0.129,0.172], quat_xyzw=position_r.orientation, cartesian=False)
+                    moveit2.wait_until_executed()
+
+                elif contador == 2:
+                    moveit2.move_to_pose(position=[-0.251,-0.129,0.195], quat_xyzw=position_r.orientation, cartesian=False)
+                    moveit2.wait_until_executed()
+
+                elif contador == 3:
+                    moveit2.move_to_pose(position=[-0.251,-0.129,0.211], quat_xyzw=position_r.orientation, cartesian=False)
+                    moveit2.wait_until_executed()
+
+                time.sleep(1)
+
+
                 control_node.open_gripper() 
 
                 moveit2.move_to_pose(position=[-0.251,-0.129,0.35], quat_xyzw=position_r.orientation, cartesian=True)
@@ -266,6 +285,11 @@ def main(args=None):
                 moveit2.wait_until_executed()
 
                 time.sleep(1)
+
+                contador = contador + 1
+
+                if contador == 4:
+                    contador = 0
 
         if(respuesta == 2):
             control_node.get_logger().info(f"respuesta robot: {respuesta}")
@@ -378,22 +402,22 @@ def main(args=None):
                 #contador = contador + 1
                 control_node.get_logger().info("HEY: Aplicacion 2")
                 position_r = control_node.pose_required_print()
-
+                
                 if contador == 0 or contador == 1:
 
-                    moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
+                    moveit2.move_to_pose(position=[position_r.position.x + 0.064,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
                     moveit2.wait_until_executed()
 
-                    time.sleep(2)
+                    time.sleep(1)
 
-                    moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
+                    moveit2.move_to_pose(position=[position_r.position.x + 0.064,position_r.position.y,position_r.position.z + 0.01], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
                     moveit2.wait_until_executed()
 
                     time.sleep(1)
 
                     control_node.close_gripper() 
 
-                    time.sleep(2)
+                    time.sleep(1)
 
                     moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) 
                     moveit2.wait_until_executed()
@@ -403,16 +427,34 @@ def main(args=None):
                     moveit2.move_to_pose(position=[-0.155,-0.267,0.28], quat_xyzw=position_r.orientation, cartesian=True)
                     moveit2.wait_until_executed()
 
-                    time.sleep(3)
+                    time.sleep(2)
+                
+                    if contador == 0:
+
+                        moveit2.move_to_pose(position=[-0.255,-0.402,0.14], quat_xyzw=position_r.orientation, cartesian=True)
+                        moveit2.wait_until_executed()
+
+                    else:
+                        moveit2.move_to_pose(position=[-0.188,-0.402,0.14], quat_xyzw=position_r.orientation, cartesian=True)
+                        moveit2.wait_until_executed()
+
+                    control_node.open_gripper()
+
+                    time.sleep(1)
+
+                    moveit2.move_to_pose(position=[-0.155,-0.267,0.28], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.wait_until_executed()
+
+                    time.sleep(1)
 
                     control_node.get_logger().info(f"{contador}")
-
+                
                 else:
 
                     moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
                     moveit2.wait_until_executed()
 
-                    time.sleep(2)
+                    time.sleep(1)
 
                     moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
                     moveit2.wait_until_executed()
@@ -426,6 +468,24 @@ def main(args=None):
                     moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) 
                     moveit2.wait_until_executed()
 
+                    time.sleep(2)
+
+                    moveit2.move_to_pose(position=[-0.155,-0.267,0.28], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.wait_until_executed()
+
+                    time.sleep(2)
+
+                    if contador == 2:
+
+                        moveit2.move_to_pose(position=[-0.13,-0.402,0.14], quat_xyzw=position_r.orientation, cartesian=True)
+                        moveit2.wait_until_executed()
+
+                    elif contador == 3:
+                        moveit2.move_to_pose(position=[-0.074,-0.402,0.145], quat_xyzw=position_r.orientation, cartesian=True)
+                        moveit2.wait_until_executed()
+
+                    control_node.open_gripper()
+
                     time.sleep(1)
 
                     moveit2.move_to_pose(position=[-0.155,-0.267,0.28], quat_xyzw=position_r.orientation, cartesian=True)
@@ -434,6 +494,9 @@ def main(args=None):
                     time.sleep(1)
 
                     control_node.get_logger().info(f"{contador}")
+
+
+                contador = contador + 1
 
                 if contador == 4:
                     contador = 0

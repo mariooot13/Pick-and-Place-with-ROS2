@@ -49,7 +49,7 @@ class ObjectDetector(Node):
 
         self.timer = self.create_timer(4, self.actualizar_distance_depth) 
 
-        self.timer = self.create_timer(25, self.change_color) ##22
+        #self.timer = self.create_timer(25, self.change_color) ##22
 
         self.depth_distance_obj = 0
         self.medidas = []
@@ -87,6 +87,7 @@ class ObjectDetector(Node):
     def actualizar_sec_colores(self, msg):
         self.sec_color = msg.data
         self.get_logger().info(f"funcion {self.sec_color}")
+        self.timer = self.create_timer(25, self.change_color) ##22
         
 
     def change_color(self):
@@ -163,7 +164,8 @@ class ObjectDetector(Node):
 
     def detect_object(self, msg):
         cv_image = self.bridge.imgmsg_to_cv2(msg, 'bgr8')
-        hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+        hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)    
+
 
         #Calibracion:
         """
@@ -214,6 +216,7 @@ class ObjectDetector(Node):
         self.get_logger().info(f"algoritmo {self.counter}")
         
         if len(self.sec_color) == 4 and self.counter < 5:
+            
             if self.sec_color[self.counter] == "a":
                 self.mask_high = blue_upper
                 self.mask_low = blue_lower
@@ -244,7 +247,7 @@ class ObjectDetector(Node):
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
-            if w > 60 and h > 100 and w < 100 and h < 250:  # Adjust these values according to your object size 50,50
+            if (w > 60 and h > 100 and w < 100 and h < 250) or (h > 60 and w > 100 and h < 100 and w < 250):  # Adjust these values according to your object size 50,50
                 cv2.rectangle(cv_image, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 #Coordenadas del objeto en la imgen a color de 24 bits
                 self.centro_x_24bits = x - w/2 - w/4#importante

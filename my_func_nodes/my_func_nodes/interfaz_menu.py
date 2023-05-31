@@ -5,6 +5,9 @@ import rclpy
 from rclpy.node import Node
 import threading
 from threading import Thread
+import asyncio
+
+
 
 class interfaz_menu(Node):
     def __init__(self):
@@ -41,20 +44,20 @@ class interfaz_menu(Node):
         self.imagen_m = self.imagen_m.resize((10000, 4000)) 
         self.imagen_tk_m = ImageTk.PhotoImage(self.imagen_m)
 
-        self.imagen_ap1 = Image.open("/home/mario/workspace/ros_ur_driver/src/my_func_nodes/resource/orden.jpeg")  # Reemplaza "imagen.jpg" con la ruta y nombre de tu imagen en formato JPEG
+        self.imagen_ap1 = Image.open("/home/mario/workspace/ros_ur_driver/src/my_func_nodes/resource/AP1.png")  # Reemplaza "imagen.jpg" con la ruta y nombre de tu imagen en formato JPEG
         self.imagen_ap1 = self.imagen_ap1.resize((200, 140)) 
         self.imagen_tk_ap1 = ImageTk.PhotoImage(self.imagen_ap1)
 
-        self.imagen_ap2 = Image.open("/home/mario/workspace/ros_ur_driver/src/my_func_nodes/resource/paletizado.jpeg")  # Reemplaza "imagen.jpg" con la ruta y nombre de tu imagen en formato JPEG
+        self.imagen_ap2 = Image.open("/home/mario/workspace/ros_ur_driver/src/my_func_nodes/resource/AP2.png")  # Reemplaza "imagen.jpg" con la ruta y nombre de tu imagen en formato JPEG
         self.imagen_ap2 = self.imagen_ap2.resize((200, 140)) 
         self.imagen_tk_ap2 = ImageTk.PhotoImage(self.imagen_ap2)
 
-        #imagen_ap3 = Image.open("despaletizado.jpeg")  HACER LUNES
-        #imagen_ap3 = imagen_ap3.resize((10000, 4000)) 
-        #imagen_tk_ap3 = ImageTk.PhotoImage(imagen_ap3)
+        self.imagen_ap3 = Image.open("/home/mario/workspace/ros_ur_driver/src/my_func_nodes/resource/AP3.png") 
+        self.imagen_ap3 = self.imagen_ap3.resize((200, 140)) 
+        self.imagen_tk_ap3 = ImageTk.PhotoImage(self.imagen_ap3)
 
-        # Establecer el tamaño de la ventana
-        self.ventana.geometry("1400x500")  # Ancho x Alto
+        # tamaño de la ventana: Ancho x Alto
+        self.ventana.geometry("1370x500") 
 
         # Agregar widgets a la ventana
         self.etiqueta_robot = tk.Label(self.ventana, image=self.imagen_tk_robot)
@@ -63,51 +66,48 @@ class interfaz_menu(Node):
         self.etiqueta0 = tk.Label(self.ventana, text="        BIENVENIDO        ",font=("Arial", 18, "bold"),bg="#333333",fg="white")
         self.etiqueta0.place(x=780, y=10)
 
-        self.etiqueta1 = tk.Label(self.ventana, text="        A continuación, va a poder elegir entre diferentes aplicaciones de PICK & PLACE        ",font=("Arial", 15, "bold"),bg="#333333",fg="white")
-        self.etiqueta1.place(x=460, y=50)
+        self.etiqueta1 = tk.Label(self.ventana, text="       A continuación, va a poder elegir entre diferentes aplicaciones de PICK & PLACE.      ",font=("Arial", 15, "bold"),bg="#333333",fg="white")
+        self.etiqueta1.place(x=469, y=50)
 
         self.etiqueta_color = tk.Label(self.ventana, text="     Seleccione los colores por orden de las piezas a recoger.     ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
         self.etiqueta_color.place(x=469, y=140)
 
-        self.etiqueta_color_2 = tk.Label(self.ventana, text="     ¡Haga un click por color!                                                      ----->     ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_color_2 = tk.Label(self.ventana, text="     ¡Haga un click por color!                                                      ----->    ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
         self.etiqueta_color_2.place(x=469, y=170)
 
-        self.etiqueta_ap1 = tk.Label(self.ventana, text="  Aplicación 1: Ordenado de piezas  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
-        self.etiqueta_ap1.place(x=447, y=455)
+        self.etiqueta_ap1 = tk.Label(self.ventana, text="  1. Orden de piezas  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_ap1.place(x=508, y=455)
 
-        self.etiqueta_ap2= tk.Label(self.ventana, text="  Aplicación  2: Paletizado  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
-        self.etiqueta_ap2.place(x=801, y=455)
+        self.etiqueta_ap2= tk.Label(self.ventana, text="  2. Paletizado de piezas  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_ap2.place(x=810, y=455)
 
-        self.etiqueta_ap3= tk.Label(self.ventana, text="  Aplicación  3: Despaletizado  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
-        self.etiqueta_ap3.place(x=1118, y=455)
+        self.etiqueta_ap3= tk.Label(self.ventana, text="  3. Despaletizado de piezas  ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_ap3.place(x=1120, y=455)
 
-        self.etiqueta_op= tk.Label(self.ventana, text="     Seleccione una opción por favor:     ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
+        self.etiqueta_op= tk.Label(self.ventana, text="     Seleccione la aplicación que desea llevar a cabo:     ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
         self.etiqueta_op.place(x=469, y=255)
 
         self.boton1 = tk.Button(self.ventana, image=self.imagen_tk_ap1, width=200, height=140, command=self.respuesta_1)
         self.boton2 = tk.Button(self.ventana, image=self.imagen_tk_ap2, width=200, height=140, command=self.respuesta_2)
-        self.boton3 = tk.Button(self.ventana, width=20, height=8, command=self.respuesta_3)
+        self.boton3 = tk.Button(self.ventana, image=self.imagen_tk_ap3, width=200, height=140, command=self.respuesta_3)
         self.boton4 = tk.Button(self.ventana, image=self.imagen_tk_n, width=100, height=70, command=self.color_naranja)
         self.boton5 = tk.Button(self.ventana, image=self.imagen_tk_m, width=100, height=70,command=self.color_morado)
         self.boton6 = tk.Button(self.ventana, image=self.imagen_tk_v, width=100, height=70,command=self.color_verde)
         self.boton7 = tk.Button(self.ventana,  image=self.imagen_tk_a, width=100, height=70,command=self.color_azul)
-        # Posicionar los botones usando el método pack()
-        self.boton1.place(x=483, y=300)  # Arriba
-        self.boton2.place(x=800, y=300) # Izquierda
-        self.boton3.place(x=1144, y=300)  # Derecha
-        self.boton4.place(x=1117, y=95)  # Abajo
-        self.boton5.place(x=1227, y=95)  # Por defecto, se posiciona en orden
+        
+        #Posicionamiento de los botones
+        self.boton1.place(x=483, y=300)  
+        self.boton2.place(x=800, y=300) 
+        self.boton3.place(x=1127, y=300)  
+        self.boton4.place(x=1117, y=95)  
+        self.boton5.place(x=1227, y=95) 
         self.boton6.place(x=1227, y=175) 
         self.boton7.place(x=1117, y=175) 
-        self.get_logger().info(f"jejeejejej{self.respuesta}")
 
-        # Iniciar el bucle principal de Tkinter
+        #Bucle del lanzamiento de la ventana
         self.ventana.mainloop()
 
-        self.get_logger().info("holaaaaaaaaaaaaaa")
-        self.get_logger().info(f"{self.respuesta}")
-
-    #Funciones para cada boton
+    #Funciones auxiliares
     def respuesta_1(self):
         msg = Int8()
         msg.data = 1
@@ -135,38 +135,24 @@ class interfaz_menu(Node):
     def color_azul(self):
         self.sec_color.data += "a"
 
-def publish_sec_color(publisher, string_data):
-    #node.get_logger().info(f"{string_data}")
-    if len(string_data.data) == 4:
-        publisher.publish(string_data)
+    def publish_sec_color(self):
+    
+        if len(self.sec_color.data) == 4:
+            self.publisher_color.publish(self.sec_color)
+            
 
 
 def main(args=None):
     rclpy.init(args=args)
     interfaz = interfaz_menu()
 
-    executor = rclpy.executors.MultiThreadedExecutor(2)
-    executor.add_node(interfaz)
-    executor_thread = Thread(target=executor.spin, daemon=True, args=())
-    executor_thread.start()
+    publish_thread = Thread(target=interfaz.publish_sec_color)
+    publish_thread.start()
 
-    def spin_once():
-        while rclpy.ok():
-            rclpy.spin_once(interfaz)
+    while True:
+        rclpy.spin_once(interfaz)
 
-    spin_thread = Thread(target=spin_once, daemon=True)
-    spin_thread.start()
-
-    color_thread = Thread(target=publish_sec_color,args=(interfaz.publisher_color, interfaz.sec_color))
-    color_thread.start()
-
-    spin_thread.join()  # Esperar a que el hilo de spin_once termine
-    color_thread.join()  # Esperar a que el hilo de publicación termine
-
-    #rclpy.spin(interfaz)
-    interfaz.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     try:
