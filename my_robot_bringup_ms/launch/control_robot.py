@@ -30,7 +30,7 @@ def generate_launch_description():
 
     get_package_share_directory("ur_bringup")
     
-    a = IncludeLaunchDescription(
+    drivers = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([
                     FindPackageShare('ur_bringup'),
@@ -72,23 +72,46 @@ def generate_launch_description():
             )
     
     
-    """
+    
     control_robot_node = Node(
                 package="my_func_nodes",
                 executable="control_robot_exec",
                 name="control_robot_master",
-                parameters=[config_parameters],
                 output={
                     "stdout": "screen",
                     "stderr": "screen",
                 },
             )
-    """
+
+    camera_detection = Node(
+                package="my_func_nodes",
+                executable="camera_detection",
+                name="camera_pub_pos",
+                output={
+                    "stdout": "screen",
+                    "stderr": "screen",
+                },
+            )
+    
+    interfaz = Node(
+                package="my_func_nodes",
+                executable="interfaz_exec",
+                name="interfaz_menu",
+                output={
+                    "stdout": "screen",
+                    "stderr": "screen",
+                },
+            )
+
+
     nodes_to_start = [
-    	#control_robot_node,
-        a,
+    	
+        drivers,
         moveit,
+        control_robot_node,
         camera,
+        camera_detection,
+        interfaz,
     	
     ]   
 

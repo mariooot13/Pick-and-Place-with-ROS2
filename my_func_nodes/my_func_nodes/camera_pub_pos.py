@@ -128,8 +128,8 @@ class ObjectDetector(Node):
    
     def actualizar_distance_depth(self):
 
-        #media = sum(self.medidas) / len(self.medidas)
-        self.get_logger().info(f"EL objeto se encuentra a {self.depth_distance_obj} cm de distancia de la camara")
+        
+        #self.get_logger().info(f"EL objeto se encuentra a {self.depth_distance_obj} cm de distancia de la camara")
         #Ajustar
         self.position_z_to_robot =  13 + (62.5  - (self.depth_distance_obj + 0.8))  #61.51 al suelo, -13 pinza. habia 63  0.176
         self.medidas = []
@@ -212,8 +212,8 @@ class ObjectDetector(Node):
         #self.mask_high = green_upper
         #self.mask_low = green_lower
         #Corregir
-        self.get_logger().info(f"algoritmo {self.sec_color}")
-        self.get_logger().info(f"algoritmo {self.counter}")
+        #self.get_logger().info(f"algoritmo {self.sec_color}")
+        #self.get_logger().info(f"algoritmo {self.counter}")
         
         if len(self.sec_color) == 4 and self.counter < 5:
             
@@ -279,8 +279,8 @@ class ObjectDetector(Node):
 
                 
 
-                centro_robot_cm_x = - 534 + centro_cm_x * 10
-                centro_robot_cm_y = - 141 - centro_cm_y * 10 
+                centro_robot_cm_x = - 540 + centro_cm_x * 10
+                centro_robot_cm_y = - 158 - centro_cm_y * 10 
 
                 #self.get_logger().info(f"centro de la camara en x{centro_robot_cm_x}, centro de la camara en y {centro_robot_cm_y}")
                     
