@@ -125,29 +125,38 @@ class interfaz_menu(Node):
 
     def color_naranja(self):
         self.sec_color.data += "n"
+        if len(self.sec_color.data) == 4:
+            self.publisher_color.publish(self.sec_color)
 
     def color_morado(self):
         self.sec_color.data += "m"
+        if len(self.sec_color.data) == 4:
+            self.publisher_color.publish(self.sec_color)
 
     def color_verde(self):
         self.sec_color.data += "v"
+        if len(self.sec_color.data) == 4:
+            self.publisher_color.publish(self.sec_color)
 
     def color_azul(self):
         self.sec_color.data += "a"
+        if len(self.sec_color.data) == 4:
+            self.publisher_color.publish(self.sec_color)
 
-    def publish_sec_color(self):
+"""            
+ def publish_sec_color(self):
     
         if len(self.sec_color.data) == 4:
             self.publisher_color.publish(self.sec_color)
-            
+"""
 
 
 def main(args=None):
     rclpy.init(args=args)
     interfaz = interfaz_menu()
 
-    publish_thread = Thread(target=interfaz.publish_sec_color)
-    publish_thread.start()
+    #publish_thread = Thread(target=interfaz.publish_sec_color)
+    #publish_thread.start()
 
     while True:
         rclpy.spin_once(interfaz)
