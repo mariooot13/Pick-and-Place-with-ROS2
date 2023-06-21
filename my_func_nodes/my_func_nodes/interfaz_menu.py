@@ -13,17 +13,22 @@ class interfaz_menu(Node):
     def __init__(self):
         super().__init__("interfaz_menu")
 
+        #Publishers for communications
+
         self.publisher_resp = self.create_publisher(Int8, "resp_aplicacion", 10)
         self.publisher_color = self.create_publisher(String, "sec_color", 10)
+
+        #Values to be communicated
 
         self.respuesta = 0
         self.sec_color = String()
 
-        # Crear una instancia de Tkinter
+        #Tkinter instance
         self.ventana = tk.Tk()
         self.ventana.title("Pick and Place con UR3e y visión") 
         self.ventana.configure(bg="#FFFFFF") 
 
+        #Images load
         self.robot_imagen = Image.open("/home/mario/workspace/ros_ur_driver/src/my_func_nodes/resource/robot.jpeg")
         self.robot_imagen = self.robot_imagen.resize((400, 488))
         self.imagen_tk_robot = ImageTk.PhotoImage(self.robot_imagen)
@@ -56,10 +61,10 @@ class interfaz_menu(Node):
         self.imagen_ap3 = self.imagen_ap3.resize((200, 140)) 
         self.imagen_tk_ap3 = ImageTk.PhotoImage(self.imagen_ap3)
 
-        # tamaño de la ventana: Ancho x Alto
+        #Window size
         self.ventana.geometry("1370x500") 
 
-        # Agregar widgets a la ventana
+        #Widgets
         self.etiqueta_robot = tk.Label(self.ventana, image=self.imagen_tk_robot)
         self.etiqueta_robot.place(x= 5, y = 5)
 
@@ -87,6 +92,7 @@ class interfaz_menu(Node):
         self.etiqueta_op= tk.Label(self.ventana, text="     Seleccione la aplicación que desea llevar a cabo:     ",bg="#333333",fg="white",font=("Arial", 12, "bold"))
         self.etiqueta_op.place(x=469, y=255)
 
+        #Buttons
         self.boton1 = tk.Button(self.ventana, image=self.imagen_tk_ap1, width=200, height=140, command=self.respuesta_1)
         self.boton2 = tk.Button(self.ventana, image=self.imagen_tk_ap2, width=200, height=140, command=self.respuesta_2)
         self.boton3 = tk.Button(self.ventana, image=self.imagen_tk_ap3, width=200, height=140, command=self.respuesta_3)
@@ -95,7 +101,7 @@ class interfaz_menu(Node):
         self.boton6 = tk.Button(self.ventana, image=self.imagen_tk_v, width=100, height=70,command=self.color_verde)
         self.boton7 = tk.Button(self.ventana,  image=self.imagen_tk_a, width=100, height=70,command=self.color_azul)
         
-        #Posicionamiento de los botones
+        #Buttons positioning
         self.boton1.place(x=483, y=300)  
         self.boton2.place(x=800, y=300) 
         self.boton3.place(x=1127, y=300)  
@@ -104,10 +110,10 @@ class interfaz_menu(Node):
         self.boton6.place(x=1227, y=175) 
         self.boton7.place(x=1117, y=175) 
 
-        #Bucle del lanzamiento de la ventana
+        #Window loop
         self.ventana.mainloop()
 
-    #Funciones auxiliares
+    #Additional function for the publisher to publish the correct data
     def respuesta_1(self):
         msg = Int8()
         msg.data = 1
@@ -143,20 +149,9 @@ class interfaz_menu(Node):
         if len(self.sec_color.data) == 4:
             self.publisher_color.publish(self.sec_color)
 
-"""            
- def publish_sec_color(self):
-    
-        if len(self.sec_color.data) == 4:
-            self.publisher_color.publish(self.sec_color)
-"""
-
-
 def main(args=None):
     rclpy.init(args=args)
-    interfaz = interfaz_menu()
-
-    #publish_thread = Thread(target=interfaz.publish_sec_color)
-    #publish_thread.start()
+    interfaz = interfaz_menu() #Object of the class
 
     while True:
         rclpy.spin_once(interfaz)

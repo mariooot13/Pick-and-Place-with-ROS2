@@ -29,7 +29,8 @@ def generate_launch_description():
         sys.exit(1)
 
     get_package_share_directory("ur_bringup")
-    
+
+    #Ejecucion del archivo de lanzamiento de lo controladores de UR
     drivers = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([
@@ -45,7 +46,7 @@ def generate_launch_description():
                 #'initial_joint_controller':'joint_trajectory_controller'
             }.items()
         )
-
+    #Ejecución del archivo de lanzamiento de Moveit
     moveit = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([
@@ -60,7 +61,7 @@ def generate_launch_description():
             }.items()
         )
         
-        
+    #Ejecucion del nodo creador de imagenes, camera
     camera = Node(
                 package="my_func_nodes",
                 executable="camera_exec",
@@ -72,7 +73,7 @@ def generate_launch_description():
             )
     
     
-    
+    #Ejecucion del nodo de control del robot, control_robot_node
     control_robot_node = Node(
                 package="my_func_nodes",
                 executable="control_robot_exec",
@@ -83,6 +84,7 @@ def generate_launch_description():
                 },
             )
 
+    #Ejecucion del nodo de deteccion de objetos, camera_detection
     camera_detection = Node(
                 package="my_func_nodes",
                 executable="camera_detection",
@@ -93,6 +95,7 @@ def generate_launch_description():
                 },
             )
     
+    #Ejecucion del nodo de la GUI, interfaz
     interfaz = Node(
                 package="my_func_nodes",
                 executable="interfaz_exec",

@@ -20,6 +20,7 @@ from my_moveit2_py import ur3e_model #own resources
 
 from rclpy.callback_groups import ReentrantCallbackGroup
 
+#GUI
 import tkinter as tk
 from PIL import Image,ImageTk
 from tkinter import font
@@ -28,13 +29,14 @@ class control_robot_master(Node):
     def __init__(self):
         super().__init__("control_robot_master")
         
-        # Declare all parameters
+    # Declaration of parameters
+
         self.declare_parameter("controller_name", "joint_trajectory_position_controller")
         self.declare_parameter("joints",["shoulder_pan_joint", "shoulder_lift_joint","elbow_joint","wrist_1_joint","wrist_2_joint","wrist_3_joint"]) #Obligado para lanzar inputs
         self.declare_parameter("check_starting_point", False)
         self.declare_parameter("starting_point_limits")
 
-        # Read parameters
+    # Parameters for the robot
         self.pos_wanted = JointTrajectory()
         controller_name = self.get_parameter("controller_name").value
         self.joints = self.get_parameter("joints").value
@@ -44,15 +46,15 @@ class control_robot_master(Node):
             'LETSGO')
         self.inp = None    
         
-        self.respuesta = 0 #NEW
-
-        self.sec_color = "" #NEW
+    #Main values for topics
+        self.respuesta = 0 
+        self.sec_color = "" 
 	
-	#Subscribers & Publishers
         self.pose_required = Pose()
-        self.subscriber_camera = self.create_subscription(Pose, "object_position",self.callback_recibo_pos_pedida, 10)
 
-        #subsrciber respuesta de la interfaz
+    #Subscribers & Publishers
+
+        self.subscriber_camera = self.create_subscription(Pose, "object_position",self.callback_recibo_pos_pedida, 10)
         self.subscriber_respuesta_menu = self.create_subscription(Int8, "resp_aplicacion",self.actualizar_respuesta, 10)
         
    
@@ -60,14 +62,14 @@ class control_robot_master(Node):
         if self.joints is None or len(self.joints) == 0:
             raise Exception('"joints" parameter is not set!')
 
-        # starting point stuff
+        #Supervisor of starting points
         if self.check_starting_point:
-            # declare nested params
+            # Nested params
             for name in self.joints:
                 param_name_tmp = "starting_point_limits" + "." + name
                 self.declare_parameter(param_name_tmp, [-2 * 3.14159, 2 * 3.14159])
                 self.starting_point[name] = self.get_parameter(param_name_tmp).value
-
+            #Testing
             for name in self.joints:
                 if len(self.starting_point[name]) != 2:
                     raise Exception('"starting_point" parameter is not set correctly!')
@@ -76,7 +78,7 @@ class control_robot_master(Node):
             )
 
             
-        # Initialize starting point status
+    # Starting point status
         if not self.check_starting_point:
             self.starting_point_ok = True
         else:
@@ -84,25 +86,20 @@ class control_robot_master(Node):
 
         self.joint_state_msg_received = False
 
-
-        publish_topic = "/" + controller_name + "/" + "joint_trajectory"
 	
-        #self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
-        #self.timer = self.create_timer(4, self.timer_callback)
 
+    #GUI Functions
     def actualizar_respuesta(self, msg):
         self.respuesta = msg.data
-        #self.get_logger().info(f"{self.respuesta}")
-
+        
     def resp_required(self):
         if self.respuesta is not None:
             return self.respuesta
             
 
-
-    #PINZA:
+    #USE OF GRIPPER
     
-    #prueba de servicio para la pinza.
+    #Client for the service of the gripper
     def call_gripper(self, fun, pin, state):
             client = self.create_client(SetIO, "/io_and_status_controller/set_io") #servicio de la pinza ya creado.
         
@@ -128,11 +125,13 @@ class control_robot_master(Node):
 
     #The pin can varies with the robot
 
+    #Function for closing the gripper
     def close_gripper(self):
         self.call_gripper(1, 17, 24.0)
         time.sleep(0.5)
         self.call_gripper(1,17,0.0) #Hay que descargar la pinza.
     
+    #Function for opening the gripper
     def open_gripper(self):
         self.call_gripper(1, 16, 24.0)
         time.sleep(0.5)
@@ -145,7 +144,8 @@ class control_robot_master(Node):
 
         if self.pose_required is not None:
             return self.pose_required
-    
+
+    #POSITION OF THE OBJECT FROM THE CAMERA
     def callback_recibo_pos_pedida(self, msg):
         self.pose_required.position.x = msg.position.x
         self.pose_required.position.y = msg.position.y
@@ -163,11 +163,12 @@ class control_robot_master(Node):
         self.get_logger().info(f"Position received: [{self.pose_required.position.x},{self.pose_required.position.y},{self.pose_required.position.z}], quat_xyzw: [{self.pose_required.orientation.x},{self.pose_required.orientation.y},{self.pose_required.orientation.z},{self.pose_required.orientation.w}]")
 
 
-    def joint_state_callback(self, msg): #Joint state supervisor
+    #Joints state supervisor
+    def joint_state_callback(self, msg):
 
         if not self.joint_state_msg_received:
 
-            # check start state
+            # Checking start state not to exceeded
             limit_exceeded = [False] * len(msg.name)
             for idx, enum in enumerate(msg.name):
                 if (msg.position[idx] < self.starting_point[enum][0]) or (
@@ -185,35 +186,35 @@ class control_robot_master(Node):
         else:
             return
 
-"""
-def callback(msg, respuesta):
-    respuesta = msg.data
-"""
+
 def main(args=None):
     rclpy.init(args=args)
     contador = 0
     respuesta = 0
-    control_node = control_robot_master() #Ajuste de parámteros de las articulaciones del robot
+    control_node = control_robot_master() #Object of the class created for the control of the robot
     
+    #Instatiation of Moveit
     moveit2 = MoveIt2(
         node=control_node,
         joint_names=ur3e_model.joint_names(),
         base_link_name=ur3e_model.base_link_name(),
         end_effector_name=ur3e_model.end_effector_name(),
         group_name=ur3e_model.MOVE_GROUP_ARM,
-        #callback_group=self.callback_group,
+        #callback_group=self.callback_group, #Optional
         )
-        
+    
+    #Multithread programming
     executor = rclpy.executors.MultiThreadedExecutor(2)
     executor.add_node(control_node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
 
+    #MENU -> from GUI
 
     control_node.get_logger().info("Buenas, bienvenido!\nA continuacion va a poder elegir entre diferentes aplicaciones de Pick and Place \nOpcion 1: Coger las piezas por orden y depositarlas en casa \nOpcion 2: Ordenar las piezas por colores y depositarlas \nOpcion 3: Apilar piezas del mismo color \n")
 
    
-    respuesta = control_node.resp_required()
+    respuesta = control_node.resp_required() #Position of the object
     
     while respuesta == 0:
         
@@ -223,22 +224,28 @@ def main(args=None):
     while(respuesta == 1 or respuesta == 2 or respuesta == 3):
         
         if(respuesta == 1):
+
+            #Objects order. Aplication 1 selected
+
             control_node.get_logger().info(f"respuesta: {respuesta}")
             
             time.sleep(3)
-            #input("Introduce tres colores seguidos en orden: green/orange/red\n"))
 
             while control_node.pose_required_print().position.x != 0.0 and control_node.pose_required_print().position.y != 0.0 and control_node.pose_required_print().position.z < 0.3:
-                #contador = contador + 1
+                
                 control_node.get_logger().info("HEY Aplicacion 1")
                 position_r = control_node.pose_required_print()
 
-                moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
+                #Planning and execution of trajectories
+
+                moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=position_r.orientation, cartesian=True) #moveit moves the robot
                 moveit2.wait_until_executed()
 
                 time.sleep(2)
 
-                moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
+                #Picking the objects
+
+                moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit moves the robot
                 moveit2.wait_until_executed()
 
                 time.sleep(2)
@@ -255,24 +262,25 @@ def main(args=None):
                 moveit2.move_to_pose(position=[-0.251,-0.129,0.236], quat_xyzw=position_r.orientation, cartesian=False)
                 moveit2.wait_until_executed()
 
+                #Placing the objects
                 if contador == 0:
-                    moveit2.move_to_pose(position=[-0.251,-0.129,0.152], quat_xyzw=position_r.orientation, cartesian=False)
+                    moveit2.move_to_pose(position=[-0.251,-0.129,0.19], quat_xyzw=position_r.orientation, cartesian=False)
                     moveit2.wait_until_executed()
 
                 elif contador == 1:
-                    moveit2.move_to_pose(position=[-0.251,-0.129,0.172], quat_xyzw=position_r.orientation, cartesian=False)
-                    moveit2.wait_until_executed()
-
-                elif contador == 2:
                     moveit2.move_to_pose(position=[-0.251,-0.129,0.195], quat_xyzw=position_r.orientation, cartesian=False)
                     moveit2.wait_until_executed()
 
+                elif contador == 2:
+
+                    moveit2.move_to_pose(position=[-0.251,-0.129,0.2], quat_xyzw=position_r.orientation, cartesian=False)
+                    moveit2.wait_until_executed()
+
                 elif contador == 3:
-                    moveit2.move_to_pose(position=[-0.251,-0.129,0.211], quat_xyzw=position_r.orientation, cartesian=False)
+                    moveit2.move_to_pose(position=[-0.251,-0.129,0.222], quat_xyzw=position_r.orientation, cartesian=False)
                     moveit2.wait_until_executed()
 
                 time.sleep(1)
-
 
                 control_node.open_gripper() 
 
@@ -292,14 +300,15 @@ def main(args=None):
                     contador = 0
 
         if(respuesta == 2):
-            control_node.get_logger().info(f"respuesta robot: {respuesta}")
 
-            
+            #Objects palletized. Aplication 2 selected
+
+            control_node.get_logger().info(f"respuesta {respuesta}")
+
             time.sleep(3)
-            #input("Introduce tres colores seguidos en orden: green/orange/red\n"))
 
             while control_node.pose_required_print().position.x != 0.0 and control_node.pose_required_print().position.z < 0.3:
-                #contador = contador + 1
+                
                 control_node.get_logger().info("HEY: Aplicacion 2")
                 position_r = control_node.pose_required_print()
 
@@ -307,6 +316,8 @@ def main(args=None):
                 moveit2.wait_until_executed()
 
                 time.sleep(2)
+
+                #Picking the objects
 
                 moveit2.move_to_pose(position=[position_r.position.x,position_r.position.y,position_r.position.z], quat_xyzw=position_r.orientation, cartesian=True) #moveit mueve el robot
                 moveit2.wait_until_executed()
@@ -324,13 +335,14 @@ def main(args=None):
 
                 control_node.get_logger().info(f"{contador}")
 
+                #Placing the objects
                 if contador == 0:
                     moveit2.move_to_pose(position=[-0.011,-0.408,0.239], quat_xyzw=position_r.orientation, cartesian=True)
                     moveit2.wait_until_executed()
 
                     time.sleep(1)
 
-                    moveit2.move_to_pose(position=[-0.011,-0.408,0.144], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.move_to_pose(position=[-0.011,-0.408,0.146], quat_xyzw=position_r.orientation, cartesian=True)
                     moveit2.wait_until_executed()
 
                 elif contador == 1:
@@ -340,10 +352,8 @@ def main(args=None):
 
                     time.sleep(1)
 
-                    moveit2.move_to_pose(position=[0.04,-0.410,0.144], quat_xyzw=position_r.orientation, cartesian=True)
+                    moveit2.move_to_pose(position=[0.04,-0.410,0.146], quat_xyzw=position_r.orientation, cartesian=True)
                     moveit2.wait_until_executed()
-
-                    
 
                 elif contador == 2:
 
@@ -352,10 +362,8 @@ def main(args=None):
 
                     time.sleep(1)
 
-                    moveit2.move_to_pose(position=[0.015,-0.39,0.155], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
-                    moveit2.wait_until_executed()
-
-                    
+                    moveit2.move_to_pose(position=[0.015,-0.39,0.159], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
+                    moveit2.wait_until_executed()   
 
                 elif contador == 3:
 
@@ -364,11 +372,8 @@ def main(args=None):
 
                     time.sleep(1)
 
-                    moveit2.move_to_pose(position=[0.015,-0.442,0.155], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
+                    moveit2.move_to_pose(position=[0.015,-0.442,0.159], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True)
                     moveit2.wait_until_executed()
-
-        
-
 
                 time.sleep(2)
 
@@ -392,25 +397,29 @@ def main(args=None):
                     contador = 0
 
         if(respuesta == 3):
+
+            #Objects despalletized. Aplication 3 selected
+
             control_node.get_logger().info(f"respuesta robot: {respuesta}")
 
-            
             time.sleep(3)
-            #input("Introduce tres colores seguidos en orden: green/orange/red\n"))
 
             while control_node.pose_required_print().position.x != 0.0 and control_node.pose_required_print().position.z < 0.3:
-                #contador = contador + 1
-                control_node.get_logger().info("HEY: Aplicacion 2")
+                
+                control_node.get_logger().info("HEY: Aplicacion 3")
+
                 position_r = control_node.pose_required_print()
                 
+                #Vertical despalletized.
+
                 if contador == 0 or contador == 1:
 
-                    moveit2.move_to_pose(position=[position_r.position.x + 0.064,position_r.position.y,position_r.position.z + 0.1], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
+                    moveit2.move_to_pose(position=[-0.002,-0.405,0.248], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
                     moveit2.wait_until_executed()
 
                     time.sleep(1)
 
-                    moveit2.move_to_pose(position=[position_r.position.x + 0.064,position_r.position.y,position_r.position.z + 0.01], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
+                    moveit2.move_to_pose(position=[position_r.position.x + 0.064,position_r.position.y - 0.012,position_r.position.z + 0.01], quat_xyzw=[0.18474743606783836, -0.9827670174247706, 0.004786203006938818, 0.003803496964226814], cartesian=True) #moveit mueve el robot
                     moveit2.wait_until_executed()
 
                     time.sleep(1)
@@ -449,6 +458,8 @@ def main(args=None):
 
                     control_node.get_logger().info(f"{contador}")
                 
+                #Horizontal despalletized.
+
                 else:
 
                     time.sleep(1)
