@@ -13,7 +13,7 @@ Pick-and-Place-with-ROS2
 La motivación de este proyecto consiste en implementar diferentes aplicaciones de Pick and Place con el robot colaborativo UR3e y visión artificial. El objetivo es realizarlo con la ayuda de ROS2 en Python. 
 La principal idea es reconocer varios objetos rectangulares de diferentes colores con ayuda de la cámara, convertir sus posiciones y que el robot sea capaz de realizar aplicaciones con estas en función de la petición del usuario en una interfaz gráfica. Además, se va a visualizar en tiempo real el comportamiento tanto de la cámara como del robot con Rviz.
 
-# MATERIALES NECESARIOS
+## MATERIALES NECESARIOS
 
 En cuánto a software, se necesitará tener instalada correctamente Python, ROS2, Opencv, DepthAI y Tkinter.
 En cuánto a hardware, en este proyecto se ha utilizado: 
